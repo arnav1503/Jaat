@@ -1,0 +1,30 @@
+Order Placement Error: 'quantity'
+Traceback (most recent call last):
+  File "/home/runner/workspace/app.py", line 770, in place_order
+    items_str = ', '.join([f"{item['name']} x {item['quantity']}" for item in items])
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/app.py", line 770, in <listcomp>
+    items_str = ', '.join([f"{item['name']} x {item['quantity']}" for item in items])
+                                               ~~~~^^^^^^^^^^^^
+KeyError: 'quantity'
+172.31.69.162 - - [07/Dec/2025 05:05:55] "POST /api/orders/place HTTP/1.1" 500 -
+=== GOOGLE SHEETS HEADERS ===
+Headers: ['admissionId', 'userId', 'name', 'password', 'email', 'className', 'type', 'source', 'registeredAt']
+Number of columns: 9
+=== STUDENT FOUND ===
+Row number: 2
+Data: ['18/20', 'STU001', 'Arnav Raj Singh', 'scrypt:32768:8:1$Eq8QRWHE7up3ISy0$97d26759cb1e9ce97850b32c7f1cf102252c41a3280652091838cb6b1cbc66e483b9fa705c6f2212afe83db504b540292a99a7a19303823b235bac26f6d6c10d', 's.18.20@slps.one', '7A']
+Dict keys: ['admissionId', 'userId', 'name', 'password', 'email', 'className']
+Normalized keys: ['admissionid', 'userid', 'name', 'password', 'email', 'classname', 'type', 'source', 'registeredat']
+Dict: {'admissionId': '18/20', 'userId': 'STU001', 'name': 'Arnav Raj Singh', 'password': 'scrypt:32768:8:1$Eq8QRWHE7up3ISy0$97d26759cb1e9ce97850b32c7f1cf102252c41a3280652091838cb6b1cbc66e483b9fa705c6f2212afe83db504b540292a99a7a19303823b235bac26f6d6c10d', 'email': 's.18.20@slps.one', 'className': '7A'}
+Order Placement Error: 'quantity'
+Traceback (most recent call last):
+  File "/home/runner/workspace/app.py", line 770, in place_order
+    items_str = ', '.join([f"{item['name']} x {item['quantity']}" for item in items])
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/app.py", line 770, in <listcomp>
+    items_str = ', '.join([f"{item['name']} x {item['quantity']}" for item in items])
+                                               ~~~~^^^^^^^^^^^^
+KeyError: 'quantity'
+172.31.69.162 - - [07/Dec/2025 05:05:58] "POST /api/orders/place HTTP/1.1" 500 -
+^[[B^[[B^[[B^[[B^[[B^[[B^[[B^[[B^[[B^[[B^[[B^[[B^[[B^[[B^[[B^[[B^[[B^[[B

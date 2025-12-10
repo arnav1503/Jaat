@@ -1,0 +1,8 @@
+# Exclude Python environment files
+__pycache__/
+*.pyc
+venv/
+
+# EXCLUDE SENSITIVE CREDENTIALS FILES
+canteen-app-376c7...json
+*.json

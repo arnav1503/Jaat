@@ -1,0 +1,90 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Thank You! - Canteen App</title>
+    <link rel="stylesheet" href="style2.css">
+</head>
+<body>
+    <div class="container thank-you-page">
+        <h1>🎉 Thank You for Your Order! 🎉</h1>
+        <p>Your order has been placed successfully!</p>
+
+        <div id="orderDetails"></div>
+
+        <div class="thank-you-actions">
+            <button id="backToProfileBtn">Back to Profile</button>
+            <button id="logoutBtn">Logout</button>
+        </div>
+    </div>
+
+    <script src="database.js"></script>
+    <script>
+        // Load and display the latest order details
+        document.addEventListener('DOMContentLoaded', async () => {
+            const currentUser = sessionStorage.getItem('currentUser');
+            if (currentUser) {
+                try {
+                    const userData = JSON.parse(currentUser);
+                    const userOrders = await window.CanteenDB.getUserOrders(userData.userId);
+
+                    if (userOrders.length > 0) {
+                        // Get the most recent order
+                        const latestOrder = userOrders[userOrders.length - 1];
+                        document.getElementById('orderDetails').innerHTML = `
+                            <div class="order-details">
+                                <h3>📋 Order Details</h3>
+                                <p><strong>Order ID:</strong> ${latestOrder.orderId}</p>
+                                <p><strong>Status:</strong> ${latestOrder.status}</p>
+                                <p><strong>Total:</strong> ₹${latestOrder.totalPrice.toFixed(2)}</p>
+                                <p><strong>Items:</strong></p>
+                                <ul>
+                                    ${latestOrder.items.map(item => `<li>${item.name} - ₹${item.price.toFixed(2)}</li>`).join('')}
+                                </ul>
+                                <p><strong>Order placed:</strong> ${new Date(latestOrder.timestamp).toLocaleString()}</p>
+                            </div>
+                        `;
+                    } else {
+                        document.getElementById('orderDetails').innerHTML = `
+                            <div class="order-details">
+                                <h3>📋 Order Confirmation</h3>
+                                <p>Your order has been successfully submitted!</p>
+                                <p>You will receive a confirmation shortly.</p>
+                            </div>
+                        `;
+                    }
+                } catch (error) {
+                    console.error('Error loading order details:', error);
+                    document.getElementById('orderDetails').innerHTML = `
+                        <div class="order-details">
+                            <h3>📋 Order Confirmation</h3>
+                            <p>Your order has been successfully submitted!</p>
+                        </div>
+                    `;
+                }
+            } else {
+                // If no user session, still show success message
+                document.getElementById('orderDetails').innerHTML = `
+                    <div class="order-details">
+                        <h3>📋 Order Confirmation</h3>
+                        <p>Your order has been successfully submitted!</p>
+                    </div>
+                `;
+            }
+        });
+
+        // Navigation functions
+        document.getElementById('backToProfileBtn').addEventListener('click', () => {
+            window.location.href = 'student_info.html';
+        });
+
+        document.getElementById('logoutBtn').addEventListener('click', () => {
+            sessionStorage.clear();
+            alert('Logged out successfully!');
+            window.location.href = 'index.html';
+        });
+    </script>
+</body>
+</html>
