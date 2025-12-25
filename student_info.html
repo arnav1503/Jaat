@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Profile - Canteen App</title>
+    <link rel="stylesheet" href="style2.css">
+</head>
+<body>
+    <div class="container profile-page">
+        <h1>Your Profile</h1>
+        <p><strong>Name:</strong> <span id="profileName">Demo Student Name</span></p>
+        <p><strong>Class:</strong> <span id="profileClass">Class 7A</span></p>
+        <p><strong>Admission ID:</strong> <span id="profileAdmission">ADM001</span></p>
+
+
+        <div class="profile-actions">
+            <button id="goToFoodSelectionBtn">Order Food</button>
+            <button id="logoutBtn">Logout</button>
+        </div>
+    </div>
+
+    <script>
+        // Load user data from session
+        document.addEventListener('DOMContentLoaded', () => {
+            const currentUser = sessionStorage.getItem('currentUser');
+            if (!currentUser) {
+                alert('Please log in first!');
+                window.location.href = 'index.html';
+                return;
+            }
+
+            try {
+                const userData = JSON.parse(currentUser);
+                document.getElementById('profileName').textContent = userData.name;
+                document.getElementById('profileClass').textContent = userData.className;
+                document.getElementById('profileAdmission').textContent = userData.admissionId;
+
+                // Remove the warning message since we now have real data
+                const warningMsg = document.querySelector('.warning-message');
+                if (warningMsg) {
+                    warningMsg.remove();
+                }
+            } catch (error) {
+                console.error('Error loading user data:', error);
+                alert('Error loading profile. Please log in again.');
+                window.location.href = 'index.html';
+            }
+        });
+
+        document.getElementById('goToFoodSelectionBtn').addEventListener('click', () => {
+            window.location.href = 'food_selection.html';
+        });
+
+        document.getElementById('logoutBtn').addEventListener('click', () => {
+            sessionStorage.clear();
+            alert('Logged out successfully!');
+            window.location.href = 'index.html';
+        });
+    </script>
+</body>
+</html>

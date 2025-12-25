@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Complete Registration - Canteen App</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style2.css') }}">
+    <style>
+        .registration-form {
+            max-width: 400px;
+            margin: 50px auto;
+            padding: 30px;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+        .form-group {
+            margin: 15px 0;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+        }
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 5px;
+            font-size: 16px;
+            box-sizing: border-box;
+        }
+        .form-group input:focus, .form-group select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        .form-group.disabled input {
+            background: #f5f5f5;
+            cursor: not-allowed;
+        }
+        .submit-btn {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: transform 0.2s;
+        }
+        .submit-btn:hover {
+            transform: translateY(-2px);
+        }
+        .submit-btn:active {
+            transform: translateY(0);
+        }
+        .error-message {
+            color: #d32f2f;
+            margin-bottom: 15px;
+            padding: 10px;
+            background: #ffebee;
+            border-radius: 5px;
+            display: none;
+        }
+        .success-icon {
+            color: #4caf50;
+            font-size: 14px;
+            margin-left: 5px;
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        .info-text {
+            text-align: center;
+            color: #666;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="registration-form">
+        <h1>Complete Your Registration</h1>
+        <p class="info-text">Your email: <strong>{{ email }}</strong></p>
+        
+        {% if error %}
+        <div class="error-message" style="display: block;">{{ error }}</div>
+        {% endif %}
+
+        <form method="POST">
+            <div class="form-group disabled">
+                <label>Name</label>
+                <input type="text" value="{{ name }}" disabled>
+                <span class="success-icon">✓</span>
+            </div>
+
+            <div class="form-group disabled">
+                <label>Admission ID</label>
+                <input type="text" value="{{ admission_id }}" disabled>
+                <span class="success-icon">✓</span>
+            </div>
+
+            <div class="form-group">
+                <label for="class">Your Class (e.g., 7A, 8B, 9C)*</label>
+                <input type="text" id="class" name="class" placeholder="Enter your class" required>
+            </div>
+
+            <div class="form-group">
+                <label for="student_id">Create Student ID*</label>
+                <input type="text" id="student_id" name="student_id" placeholder="e.g., STU001" required>
+            </div>
+
+            <div class="form-group">
+                <label for="password">Create Password*</label>
+                <input type="password" id="password" name="password" placeholder="At least 6 characters" required minlength="6" autocomplete="new-password">
+            </div>
+
+            <button type="submit" class="submit-btn">Complete Registration</button>
+        </form>
+    </div>
+</body>
+</html>

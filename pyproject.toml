@@ -1,0 +1,16 @@
+[project]
+name = "repl-nix-workspace"
+version = "0.1.0"
+description = "Canteen Management System with Google Sheets Integration"
+requires-python = ">=3.11"
+dependencies = [
+    "flask>=3.1.2",
+    "flask-login>=0.6.3",
+    "oauthlib>=3.3.1",
+    "requests>=2.32.5",
+    "gspread",
+    "google-auth",
+    "openai",
+    "werkzeug",
+    "reportlab",
+]

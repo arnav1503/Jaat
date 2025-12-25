@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Canteen App - Welcome!</title>
+    <link rel="stylesheet" href="style2.css">
+</head>
+<body>
+    <div class="container welcome-page">
+        <h1>Welcome to the Canteen App!</h1>
+        <p>Choose your option to get started:</p>
+
+        <div class="main-options auth-options">
+            <button id="studentLoginBtn" class="main-option-btn">Student Login</button>
+            <button id="studentRegisterBtn" class="main-option-btn">Student Register</button>
+            <button id="staffLoginBtn" class="main-option-btn">Staff Login</button>
+        </div>
+
+        <!-- Login Section (Hidden by default) -->
+        <div class="auth-section hidden" id="loginSection">
+            <h2>Student Login</h2>
+            <input type="text" id="loginId" placeholder="Enter your Student ID">
+            <input type="password" id="loginPassword" placeholder="Enter your Password">
+            <button id="loginBtn">Login</button>
+            <button id="backToMainBtn" class="back-btn">Back to Main</button>
+
+        </div>
+
+        <!-- Register Section (Hidden by default) -->
+        <div class="auth-section hidden" id="registerSection">
+            <h2>Student Registration</h2>
+            <input type="text" id="regId" placeholder="Create Student ID">
+            <input type="password" id="regPassword" placeholder="Create Password">
+            <input type="text" id="regName" placeholder="Your Full Name">
+            <input type="text" id="regClass" placeholder="Your Class (e.g., 7A)">
+            <input type="text" id="regAdmission" placeholder="Your Admission ID (e.g., ADM001)">
+            <button id="registerBtn">Register</button>
+            <button id="backToMainFromRegBtn" class="back-btn">Back to Main</button>
+
+        </div>
+
+        <!-- Staff Login Section (Hidden by default) -->
+        <div class="auth-section hidden" id="staffSection">
+            <h2>Staff Login</h2>
+            <input type="text" id="staffId" placeholder="Enter Staff ID">
+            <input type="password" id="staffPassword" placeholder="Enter Staff Password">
+            <button id="staffLoginSubmitBtn">Login as Staff</button>
+            <button id="backToMainFromStaffBtn" class="back-btn">Back to Main</button>
+
+        </div>
+    </div>
+
+    <script>
+        // --- NUCLEAR OPTION: MANUAL SMOOTH SCROLL ENGINE ---
+        // This function overrides browser defaults and forces animation frame-by-frame.
+        function manualSmoothScroll(target, duration = 800) {
+            const targetPosition = target.getBoundingClientRect().top + window.pageYOffset - 50; // -50px for some breathing room at top
+            const startPosition = window.pageYOffset;
+            const distance = targetPosition - startPosition;
+            let startTime = null;
+
+            function animation(currentTime) {
+                if (startTime === null) startTime = currentTime;
+                const timeElapsed = currentTime - startTime;
+
+                // Easing function (easeOutCubic) for a natural, non-robotic feel
+                // It starts fast and slows down gently at the end.
+                const run = easeOutCubic(timeElapsed, startPosition, distance, duration);
+
+                window.scrollTo(0, run);
+
+                if (timeElapsed < duration) {
+                    requestAnimationFrame(animation);
+                }
+            }
+
+            // Easing math: t=time, b=start, c=change/distance, d=duration
+            function easeOutCubic(t, b, c, d) {
+                t /= d;
+                t--;
+                return c*(t*t*t + 1) + b;
+            }
+
+            requestAnimationFrame(animation);
+        }
+
+        function showSection(sectionId) {
+            const loginSection = document.getElementById('loginSection');
+            const registerSection = document.getElementById('registerSection');
+            const staffSection = document.getElementById('staffSection');
+            const mainOptions = document.querySelector('.main-options');
+            const welcomePage = document.querySelector('.welcome-page');
+
+            // Hide all sections first
+            loginSection.classList.add('hidden');
+            registerSection.classList.add('hidden');
+            staffSection.classList.add('hidden');
+            mainOptions.classList.add('hidden');
+
+            let targetElement = null;
+
+            // Show selected section
+            if (sectionId === 'main') {
+                mainOptions.classList.remove('hidden');
+                // For main, we just want to scroll back to top quickly but smoothly
+                manualSmoothScroll(document.body, 500);
+            } else {
+                const section = document.getElementById(sectionId);
+                section.classList.remove('hidden');
+                targetElement = section;
+            }
+
+            // Execute the manual scroll if a target is set
+            if (targetElement) {
+                // Small timeout to let the browser render the new section's height before we calculate scroll distance
+                setTimeout(() => {
+                    manualSmoothScroll(targetElement, 800); // 800ms duration for visibility
+                }, 10); 
+            }
+        }
+
+        // Main option buttons
+        document.getElementById('studentLoginBtn').addEventListener('click', () => showSection('loginSection'));
+        document.getElementById('studentRegisterBtn').addEventListener('click', () => showSection('registerSection'));
+        document.getElementById('staffLoginBtn').addEventListener('click', () => showSection('staffSection'));
+
+        // Back to main buttons
+        document.getElementById('backToMainBtn').addEventListener('click', () => showSection('main'));
+        document.getElementById('backToMainFromRegBtn').addEventListener('click', () => showSection('main'));
+        document.getElementById('backToMainFromStaffBtn').addEventListener('click', () => showSection('main'));
+
+        // --- Student Registration Logic (Unchanged) ---
+        document.getElementById('registerBtn').addEventListener('click', async () => {
+            const userId = document.getElementById('regId').value.trim();
+            const password = document.getElementById('regPassword').value.trim();
+            const name = document.getElementById('regName').value.trim();
+            const className = document.getElementById('regClass').value.trim();
+            const admissionId = document.getElementById('regAdmission').value.trim();
+
+            if (!userId || !password || !name || !className || !admissionId) {
+                alert('Please fill in all fields!'); return;
+            }
+            // ... (rest of your validation logic here if needed)
+             const userData = { userId, password, name, className, admissionId, type: 'student', registeredAt: new Date().toISOString() };
+             if (window.CanteenDB && await window.CanteenDB.userExists(userId)) { alert('User already exists!'); return; }
+
+            if (window.CanteenDB && window.CanteenDB.saveUser(userData)) {
+                window.CanteenDB.saveSession(userData);
+                window.location.href = 'student_info.html';
+            }
+        });
+
+        // --- Student Login Logic (Unchanged) ---
+        document.getElementById('loginBtn').addEventListener('click', async () => {
+            const userId = document.getElementById('loginId').value.trim();
+            const password = document.getElementById('loginPassword').value.trim();
+            if (window.CanteenDB && await window.CanteenDB.validateUser(userId, password)) {
+                 window.CanteenDB.saveSession(await window.CanteenDB.getUser(userId));
+                 window.location.href = 'student_info.html';
+            } else { alert('Invalid credentials!'); }
+        });
+
+        // --- Staff Login Logic (Unchanged) ---
+        document.getElementById('staffLoginSubmitBtn').addEventListener('click', async () => {
+             const userId = document.getElementById('staffId').value.trim();
+             const password = document.getElementById('staffPassword').value.trim();
+             if (window.CanteenDB && await window.CanteenDB.validateStaff(userId, password)) {
+                 const staffData = await window.CanteenDB.getStaff(userId);
+                 staffData.type = 'staff';
+                 window.CanteenDB.saveSession(staffData);
+                 window.location.href = 'staff_view.html';
+             } else { alert('Invalid staff credentials!'); }
+        });
+
+        // Initial state
+        showSection('main');
+    </script>
+
+    <script src="database.js"></script>
+</body>
+</html>

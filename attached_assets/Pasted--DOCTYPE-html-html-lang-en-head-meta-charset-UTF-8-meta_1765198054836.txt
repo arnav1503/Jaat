@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Canteen App Support AI</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f7f9fc;
+        }
+        .chat-bubble-ai {
+            background-color: #e0f2fe; /* Light Blue 100 */
+            border-radius: 12px 12px 12px 0;
+            white-space: pre-wrap; /* Ensures formatting from Markdown conversion is respected */
+        }
+        .chat-bubble-user {
+            background-color: #3b82f6; /* Blue 500 */
+            color: white;
+            border-radius: 12px 12px 0 12px;
+        }
+        #responseContainer {
+            min-height: 200px;
+        }
+        .loader {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3b82f6;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-4">
+
+    <div class="w-full max-w-2xl bg-white shadow-xl rounded-xl p-6 md:p-8">
+        <header class="text-center mb-6">
+            <h1 class="text-3xl font-bold text-gray-800">Canteen Support Bot <span class="text-blue-500">AI</span></h1>
+            <p class="text-gray-500 mt-1">Specialized assistance for your pre-ordering app issues.</p>
+        </header>
+
+        <!-- Chat Area -->
+        <div id="responseContainer" class="space-y-4 p-4 border border-gray-200 rounded-lg overflow-y-auto max-h-[50vh] mb-6">
+            <div class="flex justify-start">
+                <div class="chat-bubble-ai p-3 max-w-md shadow-md">
+                    Hello! I am your Canteen App Support AI. Please describe your issue (e.g., "My order #1234 failed to process," or "I received the wrong sandwich").
+                </div>
+            </div>
+        </div>
+
+        <!-- Input Form -->
+        <div class="flex flex-col space-y-4">
+            <textarea
+                id="userInput"
+                rows="4"
+                class="w-full p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition duration-150 resize-none"
+                placeholder="Describe your issue or query here..."
+            ></textarea>
+            <button
+                id="sendButton"
+                onclick="sendMessage()"
+                class="w-full py-3 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 transition duration-200 disabled:opacity-50 flex items-center justify-center"
+            >
+                <span id="buttonText">Send Query</span>
+                <div id="loader" class="loader hidden ml-3"></div>
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // === CRITICAL: YOUR API KEY IS NOW INSERTED ===
+        const API_KEY = "AIzaSyBHDaas02x84PORwX9MwySBp0U3IOtHdAQ"; 
+        // ======================================
+
+        const MODEL_NAME = "gemini-2.5-flash-preview-09-2025";
+        const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL_NAME}:generateContent?key=${API_KEY}`;
+
+        const userInput = document.getElementById('userInput');
+        const sendButton = document.getElementById('sendButton');
+        const buttonText = document.getElementById('buttonText');
+        const loader = document.getElementById('loader');
+        const responseContainer = document.getElementById('responseContainer');
+
+        const systemPrompt = `You are the specialized "Canteen App Support Specialist AI". Your primary goal is to provide concise, friendly, and step-by-step troubleshooting or guidance for common user issues related to a digital pre-ordering and pickup app.
+Rules:
+1. Be professional, helpful, and empathetic.
+2. Address typical problems like failed payments, incorrect orders, refund requests, login issues, or pickup code errors.
+3. For any issue that cannot be solved digitally (like physical item complaints), always instruct the user to "visit the main canteen counter" or "submit a formal refund request through the app's dedicated refund form."
+4. Format steps using lists or clear headings.`;
+
+
+        // Helper for exponential backoff retry logic
+        async function fetchWithBackoff(url, options, maxRetries = 5) {
+            // Check for placeholder key before attempting fetch
+            if (!API_KEY) {
+                throw new Error("API Key is missing. Please insert your key where specified in the script.");
+            }
+
+            for (let i = 0; i < maxRetries; i++) {
+                try {
+                    const response = await fetch(url, options);
+
+                    if (response.status === 429 && i < maxRetries - 1) {
+                        const delay = Math.pow(2, i) * 1000 + Math.random() * 1000;
+                        console.log(`Rate limit hit. Retrying in ${(delay / 1000).toFixed(2)}s...`); 
+                        await new Promise(resolve => setTimeout(resolve, delay));
+                        continue;
+                    }
+
+                    if (!response.ok) {
+                         const errorText = await response.text();
+                         console.error("Non-OK HTTP response received:", response.status, errorText);
+                        throw new Error(`HTTP error! Status: ${response.status}. Details: ${errorText}`);
+                    }
+                    return response;
+                } catch (error) {
+                    if (i === maxRetries - 1) throw error;
+                    const delay = Math.pow(2, i) * 1000 + Math.random() * 1000;
+                    await new Promise(resolve => setTimeout(resolve, delay));
+                }
+            }
+            throw new Error("Exceeded max retries.");
+        }
+
+        async function sendMessage() {
+            const query = userInput.value.trim();
+            if (!query) return;
+
+            if (!API_KEY) {
+                appendMessage("CRITICAL: API Key is missing. Please insert your key.", 'ai', true);
+                return;
+            }
+
+            // 1. Display user message
+            appendMessage(query, 'user');
+            userInput.value = '';
+
+            // 2. Set loading state
+            sendButton.disabled = true;
+            buttonText.textContent = 'Processing...';
+            loader.classList.remove('hidden');
+            responseContainer.scrollTop = responseContainer.scrollHeight; // Scroll to bottom
+
+            const payload = {
+                contents: [{ parts: [{ text: query }] }],
+                systemInstruction: { parts: [{ text: systemPrompt }] },
+            };
+
+            try {
+                const response = await fetchWithBackoff(API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                const result = await response.json();
+                const aiResponse = result.candidates?.[0]?.content?.parts?.[0]?.text;
+
+                if (aiResponse) {
+                    appendMessage(aiResponse, 'ai');
+                } else {
+                    const safetyReason = result.candidates?.[0]?.finishReason === 'SAFETY';
+                    const promptFeedback = result.promptFeedback?.blockReason;
+
+                    let errorMessage = "I apologize, I received an empty or blocked response.";
+                    if (safetyReason || promptFeedback) {
+                        errorMessage += " The query may have been flagged. Please rephrase your request.";
+                    } else if (result.error) {
+                         errorMessage += " Details: " + result.error.message;
+                    }
+
+                    appendMessage(errorMessage, 'ai', true);
+                }
+
+            } catch (error) {
+                console.error("Final API Error after retries:", error);
+
+                let userErrorMessage = "I'm sorry, I'm currently unable to connect to the support system. Please try again in a moment.";
+
+                if (error.message.includes("API Key is missing")) {
+                     userErrorMessage = error.message;
+                } else if (error.message.includes("Status: 403")) {
+                    userErrorMessage = "Authentication Error: The API key is likely incorrect or lacks permission (403 Permission Denied). Please check your key.";
+                } else {
+                    userErrorMessage += ` (Error: ${error.message.substring(0, 50)}...)`;
+                }
+
+
+                appendMessage(userErrorMessage, 'ai', true);
+            } finally {
+                // 3. Reset loading state
+                sendButton.disabled = false;
+                buttonText.textContent = 'Send Query';
+                loader.classList.add('hidden');
+                // Scroll to the latest message
+                responseContainer.scrollTop = responseContainer.scrollHeight;
+            }
+        }
+
+        function appendMessage(text, sender, isError = false) {
+            const messageWrapper = document.createElement('div');
+            messageWrapper.className = `flex ${sender === 'user' ? 'justify-end' : 'justify-start'}`;
+
+            const messageBubble = document.createElement('div');
+            messageBubble.innerHTML = markdownToHtml(text);
+
+            let bubbleClasses = 'p-3 max-w-md shadow-md transition duration-300';
+            if (sender === 'user') {
+                bubbleClasses += ' chat-bubble-user';
+            } else {
+                bubbleClasses += ' chat-bubble-ai';
+            }
+
+            if (isError) {
+                 bubbleClasses = 'p-3 max-w-md shadow-md transition duration-300 bg-red-100 text-red-700 border border-red-300 rounded-xl';
+            }
+
+            messageBubble.className = bubbleClasses;
+            messageWrapper.appendChild(messageBubble);
+            responseContainer.appendChild(messageWrapper);
+        }
+
+        // Simple Markdown to HTML conversion for basic formatting (lists, bold)
+        function markdownToHtml(markdown) {
+            // Replace **bold** with <strong>
+            let html = markdown.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+            // Replace *italic* with <em>
+            html = html.replace(/\*(.*?)\*/g, '<em>$1</em>');
+
+            // Handle lists: Convert lines starting with '-' or '*' followed by a space into list items
+            const listRegex = /^\s*[-*]\s+(.*)$/gm;
+            const lines = html.split('\n');
+            let inList = false;
+            let finalHtml = '';
+
+            for (let line of lines) {
+                if (listRegex.test(line)) {
+                    if (!inList) {
+                        finalHtml += '<ul>';
+                        inList = true;
+                    }
+                    finalHtml += '<li>' + line.replace(listRegex, '$1') + '</li>';
+                } else {
+                    if (inList) {
+                        finalHtml += '</ul>';
+                        inList = false;
+                    }
+                    // Handle paragraphs (add breaks for readability)
+                    finalHtml += '<p>' + line + '</p>';
+                }
+            }
+            if (inList) {
+                finalHtml += '</ul>'; // Close list if markdown ended inside one
+            }
+
+            // Remove empty paragraph tags that might be generated
+            finalHtml = finalHtml.replace(/<p><\/p>/g, '');
+
+            return finalHtml;
+        }
+
+        userInput.addEventListener('keydown', (event) => {
+            if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault();
+                sendMessage();
+            }
+        });
+
+    </script>
+</body>
+</html>

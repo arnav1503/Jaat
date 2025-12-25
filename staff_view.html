@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Staff Portal - Canteen Orders</title>
+    <link rel="stylesheet" href="style2.css">
+</head>
+<body>
+    <div class="container staff-page">
+        <div class="staff-header">
+            <h1>Staff Portal</h1>
+            <button id="logoutBtn" class="logoutbtn">Logout</button>
+        </div>
+
+        <div class="staff-options-container">
+            <div class="options-grid">
+                <button class="option-card" onclick="window.location.href='staff_orders_dashboard.html'">
+                    <div class="option-icon">📊</div>
+                    <h3>Orders Dashboard</h3>
+                    <p>View, search & manage all orders</p>
+                </button>
+                <button class="option-card" onclick="window.location.href='staff_menu_management.html'">
+                    <div class="option-icon">🍔</div>
+                    <h3>Menu Management</h3>
+                    <p>Mark items as sold out/available</p>
+                </button>
+            </div>
+        </div>
+
+        <div class="refresh-section">
+            <button id="clearAllDataBtn" class="danger-btn">Clear All Data from database</button>
+        </div>
+    </div>
+
+
+    <script src="database.js"></script>
+    <script>
+        // Check if user is logged in as staff
+        document.addEventListener('DOMContentLoaded', () => {
+            const currentUser = window.CanteenDB.getSession();
+            if (!currentUser || currentUser.type !== 'staff') {
+                alert('Access denied! Staff login required.');
+                window.location.href = 'index.html';
+                return;
+            }
+        });
+
+        // Event listeners
+        document.getElementById('clearAllDataBtn').addEventListener('click', async () => {
+            if (confirm('Are you sure you want to clear ALL data? This cannot be undone!')) {
+                const success = await window.CanteenDB.clearAllData();
+                if (success) {
+                    alert('All data cleared successfully!');
+                    loadMenuItems();
+                } else {
+                    alert('Failed to clear data.');
+                }
+            }
+        });
+
+        document.getElementById('logoutBtn').addEventListener('click', () => {
+            window.CanteenDB.clearSession();
+            alert('Logged out successfully!');
+            window.location.href = 'index.html';
+        });
+    </script>
+</body>
+</html>

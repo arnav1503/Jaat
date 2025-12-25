@@ -1,0 +1,59 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teacher Profile - Canteen App</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style2.css') }}">
+</head>
+<body>
+    <button class="ai-assistant-btn" style="bottom: 20px; right: 20px;" onclick="window.location.href='/ai_assistant'" title="AI Assistant">🤖</button>
+    <button class="ai-assistant-btn" style="bottom: auto; top: 20px; right: 20px;" onclick="window.location.href='/feedback'" title="Send Feedback">💬</button>
+    
+    <div class="container profile-page">
+        <h1>Welcome</h1>
+        <p><strong>Name:</strong> <span id="profileName">Loading...</span></p>
+        <p><strong>Email:</strong> <span id="profileEmail">Loading...</span></p>
+        <p><strong>Staff ID:</strong> <span id="profileStaffId">Loading...</span></p>
+
+        <div class="profile-actions">
+            <button id="goToFoodSelectionBtn">Order Food</button>
+            <button id="healthTrackingBtn">💪 Health Tracker</button>
+            <button id="logoutBtn">Logout</button>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const currentUser = sessionStorage.getItem('currentUser');
+            
+            try {
+                const userData = currentUser ? JSON.parse(currentUser) : {};
+                document.getElementById('profileName').textContent = userData.name || 'N/A';
+                document.getElementById('profileEmail').textContent = userData.email || 'N/A';
+                document.getElementById('profileStaffId').textContent = userData.staffId || userData.userId || 'N/A';
+
+                document.getElementById('goToFoodSelectionBtn').addEventListener('click', () => {
+                    window.location.href = '/food_selection';
+                });
+
+                document.getElementById('healthTrackingBtn').addEventListener('click', () => {
+                    window.location.href = '/health_tracking';
+                });
+
+                document.getElementById('logoutBtn').addEventListener('click', () => {
+                    fetch('/logout').finally(() => {
+                        sessionStorage.clear();
+                        window.location.href = '/';
+                    });
+                });
+            } catch (error) {
+                console.error('Error loading user data:', error);
+                alert('Error loading profile. Please log in again.');
+                window.location.href = '/';
+            }
+        });
+    </script>
+</body>
+</html>

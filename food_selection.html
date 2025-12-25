@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Order Food - Canteen App</title>
+    <link rel="stylesheet" href="style2.css">
+    <script src="database.js"></script>
+</head>
+<body>
+    <div class="container food-selection-page">
+        <h1>Select Your Delicious Food!</h1>
+
+        <div class="food-menu" id="foodMenu">
+            </div>
+
+        <div class="order-summary">
+            <h2>Your Order:</h2>
+            <ul id="selectedItemsList"></ul>
+            <p>Total Estimated Price: <span id="totalPrice">0.00</span> INR</p>
+        </div>
+
+        <div class="food-actions">
+            <button id="placeOrderBtn">Place Order</button>
+            <button id="backToProfileBtn">Back to Profile</button>
+            <button id="logoutBtn">Logout</button>
+        </div>
+    </div>
+
+    <script>
+        // --- Client-side JavaScript for food_selection.html ---
+        // Load food items from database
+        let foodItems = [];
+        let selectedFood = []; 
+        const totalPriceElement = document.getElementById('totalPrice');
+        const selectedItemsList = document.getElementById('selectedItemsList');
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Load food items from database
+            foodItems = await window.CanteenDB.getFoodItems();
+            const foodMenu = document.getElementById('foodMenu');
+            foodItems.forEach(item => {
+                const foodItemDiv = document.createElement('div');
+                foodItemDiv.classList.add('food-item-card');
+                if (item.soldOut) {
+                    foodItemDiv.classList.add('sold-out');
+                }
+                foodItemDiv.innerHTML = `
+                    <input type="checkbox" id="${item.id}" data-price="${item.price}" data-name="${item.name}" ${item.soldOut ? 'disabled' : ''}>
+                    <label for="${item.id}">
+                        <img src="${item.image}" alt="${item.name}">
+                        <h3>${item.name}</h3>
+                        <p>Price: ₹${item.price.toFixed(2)}</p>
+                        <p class="benefits">Benefits: ${item.benefits}</p>
+                        ${item.soldOut ? '<p class="sold-out-label">SOLD OUT</p>' : ''}
+                    </label>
+                `;
+                foodMenu.appendChild(foodItemDiv);
+
+                if (!item.soldOut) {
+                    document.getElementById(item.id).addEventListener('change', updateOrderSummary);
+                }
+            });
+
+            // Handle button clicks
+            document.getElementById('placeOrderBtn').addEventListener('click', async () => {
+                if (selectedFood.length === 0) {
+                    alert("Please select some food items before proceeding!");
+                    return;
+                }
+
+                // Get current user data
+                const currentUser = window.CanteenDB.getSession();
+                if (!currentUser) {
+                    alert('Session expired. Please login again.');
+                    window.location.href = 'index.html';
+                    return;
+                }
+
+                // Create order data and save directly to database
+                const fullOrderData = {
+                    items: selectedFood,
+                    totalPrice: parseFloat(totalPriceElement.textContent),
+                    userId: currentUser.userId,
+                    userName: currentUser.name,
+                    userClass: currentUser.className,
+                    timestamp: new Date().toISOString(),
+                    status: 'pending'
+                };
+
+                try {
+                    const orderId = await window.CanteenDB.saveOrder(fullOrderData);
+                    if (orderId) {
+                        alert(`Order placed successfully! Order ID: ${orderId}`);
+                        window.location.href = 'thank_you.html';
+                    } else {
+                        alert('Failed to place order. Please try again.');
+                    }
+                } catch (error) {
+                    console.error('Order placement error:', error);
+                    alert('Error placing order. Please try again.');
+                }
+            });
+
+            document.getElementById('backToProfileBtn').addEventListener('click', () => {
+                window.location.href = 'student_info.html';
+            });
+
+            document.getElementById('logoutBtn').addEventListener('click', () => {
+                alert('Logged out. Order not placed.');
+                window.location.href = 'index.html';
+            });
+        });
+
+        function updateOrderSummary() {
+            selectedFood = []; // Clear for fresh calculation
+            let currentTotalPrice = 0;
+            const checkboxes = document.querySelectorAll('#foodMenu input[type="checkbox"]:checked');
+
+            checkboxes.forEach(checkbox => {
+                const name = checkbox.dataset.name;
+                const price = parseFloat(checkbox.dataset.price);
+                selectedFood.push({ name, price });
+                currentTotalPrice += price;
+            });
+
+            totalPriceElement.textContent = currentTotalPrice.toFixed(2);
+            displaySelectedItems();
+        }
+
+        function displaySelectedItems() {
+            selectedItemsList.innerHTML = ''; // Clear previous list
+            if (selectedFood.length === 0) {
+                selectedItemsList.innerHTML = '<li>No items selected.</li>';
+                return;
+            }
+            selectedFood.forEach(item => {
+                const listItem = document.createElement('li');
+                listItem.textContent = `${item.name} - ₹${item.price.toFixed(2)}`;
+                selectedItemsList.appendChild(listItem);
+            });
+        }
+    </script>
+</body>
+</html>
