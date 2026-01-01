@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Staff Portal - Students List</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style2.css') }}">
+    <script>
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        if (savedTheme === 'dark') {
+            document.documentElement.classList.add('dark-mode');
+        }
+    </script>
+</head>
+<body>
+    <div class="theme-switch-wrapper">
+        <span class="theme-icon">🌙</span>
+        <label class="theme-switch" for="checkbox">
+            <input type="checkbox" id="checkbox" onchange="toggleTheme()" />
+            <div class="slider round"></div>
+        </label>
+        <span class="theme-icon">☀️</span>
+    </div>
+    <button class="ai-assistant-btn" style="bottom: 20px; right: 20px;" onclick="window.location.href='/ai_assistant'" title="AI Assistant">🤖</button>
+    <button class="ai-assistant-btn" style="bottom: auto; top: 20px; right: 20px;" onclick="window.location.href='/feedback'" title="Send Feedback">💬</button>
+    
+    <div class="container staff-orders-page">
+        <div class="staff-header">
+            <button onclick="window.location.href='/staff_view'" class="back-nav-btn" style="margin-right: 20px;">← Back</button>
+            <h1>Registered Students</h1>
+            <div class="header-actions">
+                <button id="backBtn" class="back-nav-btn">← Back to Menu</button>
+                <button id="logoutBtn" class="logoutbtn">Logout</button>
+            </div>
+        </div>
+
+        <div class="dashboard-content">
+            <div class="stats-container">
+                <div class="stat-card">
+                    <div class="stat-icon">👥</div>
+                    <div class="stat-info">
+                        <h3>Total Students</h3>
+                        <p class="stat-value" id="totalStudentsCount">{{ students|length }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="search-box-container">
+                <h2>Search Students</h2>
+                <div class="search-controls">
+                    <input type="text" id="searchInput" placeholder="Enter Name, Admission No, or Class..." autocomplete="off">
+                    <button id="searchBtn" class="search-btn">🔍 Search</button>
+                    <button id="clearSearchBtn" class="clear-btn">Clear</button>
+                </div>
+            </div>
+
+            <div class="students-table-container">
+                <table class="students-table" id="studentsTable">
+                    <thead>
+                        <tr>
+                            <th>S.No</th>
+                            <th>Admission No</th>
+                            <th>Name</th>
+                            <th>Class</th>
+                            <th>Nutrition Points</th>
+                            <th>Type</th>
+                        </tr>
+                    </thead>
+                <tbody id="studentsTableBody">
+                    {% for student in students %}
+                    <tr>
+                        <td>{{ loop.index }}</td>
+                        <td>{{ student.get('userId') or student.get('admissionNo') or student.get('AdmissionNo') or 'N/A' }}</td>
+                        <td>{{ student.get('name') or student.get('Name') or 'N/A' }}</td>
+                        <td>{{ student.get('className') or student.get('class') or student.get('Class') or 'N/A' }}</td>
+                        <td><span style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white; padding: 6px 12px; border-radius: 20px; font-weight: bold;">{{ student.get('nutritionPoints', 0) }} pts</span></td>
+                        <td><span class="user-type-badge student-badge">🎓 Student</span></td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="6" class="empty-state">
+                            <p>No students registered yet.</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+                </table>
+                {% if not students %}
+                <p class="no-data">No students registered yet.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='theme-toggle.js') }}"></script>
+    <script src="{{ url_for('static', filename='database.js') }}"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            setupEventListeners();
+        });
+
+        function setupEventListeners() {
+            document.getElementById('backBtn').addEventListener('click', () => {
+                window.location.href = '/staff_view';
+            });
+
+            document.getElementById('logoutBtn').addEventListener('click', () => {
+                fetch('/logout').finally(() => {
+                    if (window.CanteenDB) {
+                        window.CanteenDB.clearSession();
+                    }
+                    alert('Logged out successfully!');
+                    window.location.href = '/';
+                });
+            });
+
+            const searchInput = document.getElementById('searchInput');
+            const searchBtn = document.getElementById('searchBtn');
+            const clearBtn = document.getElementById('clearSearchBtn');
+
+            if (searchInput) {
+                searchInput.addEventListener('input', filterStudents);
+                searchInput.addEventListener('keyup', (e) => {
+                    if (e.key === 'Enter') filterStudents();
+                });
+            }
+            
+            if (searchBtn) searchBtn.addEventListener('click', filterStudents);
+            if (clearBtn) clearBtn.addEventListener('click', () => {
+                searchInput.value = '';
+                filterStudents();
+            });
+        }
+
+        function filterStudents() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase().trim();
+            const rows = document.querySelectorAll('#studentsTableBody tr');
+            let visibleCount = 0;
+            let totalRows = rows.length;
+            
+            rows.forEach(row => {
+                const text = row.textContent.toLowerCase();
+                if (searchTerm === '' || text.includes(searchTerm)) {
+                    row.style.display = '';
+                    visibleCount++;
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+            
+            // Update the count display
+            const totalCountEl = document.getElementById('totalStudentsCount');
+            if (totalCountEl) {
+                if (searchTerm === '') {
+                    totalCountEl.textContent = totalRows;
+                } else {
+                    totalCountEl.textContent = `${visibleCount} / ${totalRows}`;
+                }
+            }
+        }
+    </script>
+</body>
+</html>

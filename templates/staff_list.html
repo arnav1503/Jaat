@@ -1,0 +1,140 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Staff Members List</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style2.css') }}">
+    <script src="{{ url_for('static', filename='theme-toggle.js') }}"></script>
+</head>
+<body>
+    <button class="theme-toggle" onclick="toggleTheme()" title="Toggle Dark Mode">🌙</button>
+    <button class="ai-assistant-btn" style="bottom: 20px; right: 20px;" onclick="window.location.href='/ai_assistant'" title="AI Assistant">🤖</button>
+    <button class="ai-assistant-btn" style="bottom: auto; top: 20px; right: 20px;" onclick="window.location.href='/feedback'" title="Send Feedback">💬</button>
+    
+    <div class="container staff-orders-page">
+        <div class="staff-header">
+            <h1>Staff Members</h1>
+            <div class="header-actions">
+                <button id="backBtn" class="back-nav-btn">← Back to Dashboard</button>
+                <button id="logoutBtn" class="logoutbtn">Logout</button>
+            </div>
+        </div>
+
+        <div class="dashboard-content">
+            <div class="stats-container">
+                <div class="stat-card">
+                    <div class="stat-icon">👔</div>
+                    <div class="stat-info">
+                        <h3>Total Staff Members</h3>
+                        <p class="stat-value" id="totalStaffCount">{{ staff_members|length }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="search-box-container">
+                <h2>Search Staff</h2>
+                <div class="search-controls">
+                    <input type="text" id="searchInput" placeholder="Enter Name or Staff ID..." autocomplete="off">
+                    <button id="searchBtn" class="search-btn">🔍 Search</button>
+                    <button id="clearSearchBtn" class="clear-btn">Clear</button>
+                </div>
+            </div>
+
+            <div class="students-table-container">
+                <table class="students-table" id="staffTable">
+                    <thead>
+                        <tr>
+                            <th>S.No</th>
+                            <th>Staff ID</th>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Type</th>
+                        </tr>
+                    </thead>
+                    <tbody id="staffTableBody">
+                        {% for staff in staff_members %}
+                        <tr>
+                            <td>{{ loop.index }}</td>
+                            <td>{{ staff.get('admissionId') or staff.get('staffId') or staff.get('AdmissionId') or 'N/A' }}</td>
+                            <td>{{ staff.get('name') or staff.get('Name') or 'N/A' }}</td>
+                            <td>{{ staff.get('email') or staff.get('Email') or 'N/A' }}</td>
+                            <td><span class="user-type-badge staff-badge">👔 Staff</span></td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% if not staff_members %}
+                <p class="no-data">No staff members registered yet.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='database.js') }}"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            setupEventListeners();
+        });
+
+        function setupEventListeners() {
+            document.getElementById('backBtn').addEventListener('click', () => {
+                window.location.href = '/staff_view';
+            });
+
+            document.getElementById('logoutBtn').addEventListener('click', () => {
+                fetch('/logout').finally(() => {
+                    if (window.CanteenDB) {
+                        window.CanteenDB.clearSession();
+                    }
+                    alert('Logged out successfully!');
+                    window.location.href = '/';
+                });
+            });
+
+            const searchInput = document.getElementById('searchInput');
+            const searchBtn = document.getElementById('searchBtn');
+            const clearBtn = document.getElementById('clearSearchBtn');
+
+            searchInput.addEventListener('input', filterStaff);
+            searchInput.addEventListener('keyup', (e) => {
+                if (e.key === 'Enter') filterStaff();
+            });
+            
+            searchBtn.addEventListener('click', filterStaff);
+            clearBtn.addEventListener('click', () => {
+                searchInput.value = '';
+                filterStaff();
+            });
+        }
+
+        function filterStaff() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase().trim();
+            const rows = document.querySelectorAll('#staffTableBody tr');
+            let visibleCount = 0;
+            let totalRows = rows.length;
+            
+            rows.forEach(row => {
+                const text = row.textContent.toLowerCase();
+                if (searchTerm === '' || text.includes(searchTerm)) {
+                    row.style.display = '';
+                    visibleCount++;
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+            
+            // Update the count display
+            const totalCountEl = document.getElementById('totalStaffCount');
+            if (totalCountEl) {
+                if (searchTerm === '') {
+                    totalCountEl.textContent = totalRows;
+                } else {
+                    totalCountEl.textContent = `${visibleCount} / ${totalRows}`;
+                }
+            }
+        }
+    </script>
+</body>
+</html>

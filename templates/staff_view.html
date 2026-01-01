@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Staff Portal - Canteen Orders</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style2.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="{{ url_for('static', filename='theme-toggle.js') }}"></script>
+</head>
+<body>
+    <div class="theme-switch-wrapper">
+        <span class="theme-icon">🌙</span>
+        <label class="theme-switch" for="checkbox">
+            <input type="checkbox" id="checkbox" onchange="toggleTheme()" />
+            <div class="slider round"></div>
+        </label>
+        <span class="theme-icon">☀️</span>
+    </div>
+    <button class="ai-assistant-btn" style="bottom: 20px; right: 20px;" onclick="window.location.href='/ai_assistant'" title="AI Assistant">🤖</button>
+    <button class="ai-assistant-btn" style="bottom: auto; top: 20px; right: 20px;" onclick="window.location.href='/feedback'" title="Send Feedback">💬</button>
+
+    <div class="container staff-page">
+        <div class="staff-header">
+            <h1>Staff Dashboard</h1>
+            <button id="logoutBtn" class="logoutbtn">Logout</button>
+        </div>
+
+        <div class="staff-options-container">
+            <h2>Management Options</h2>
+            <div class="options-grid">
+                <button class="option-card" onclick="window.location.href='/staff_orders'">
+                    <div class="option-icon">📊</div>
+                    <h3>Orders Dashboard</h3>
+                    <p>View, search & manage all orders</p>
+                </button>
+                <button class="option-card" onclick="window.location.href='/staff_menu'">
+                    <div class="option-icon">🍔</div>
+                    <h3>Menu Management</h3>
+                    <p>Mark items as sold out/available</p>
+                </button>
+                <button class="option-card" onclick="window.location.href='/staff_feedback'">
+                    <div class="option-icon">💬</div>
+                    <h3>User Feedback</h3>
+                    <p>View and manage all user feedback</p>
+                </button>
+            </div>
+        </div>
+
+        <div class="user-types-section">
+            <h2>All Users by Type</h2>
+            <div class="user-types-grid">
+                <div class="user-type-card">
+                    <h3>👨‍🎓 Students ({{ total_students }})</h3>
+                    <button class="view-btn" onclick="window.location.href='/staff_students'">VIEW ALL STUDENTS</button>
+                </div>
+                <div class="user-type-card">
+                    <h3>👨‍🏫 Teachers ({{ total_teachers }})</h3>
+                    <button class="view-btn" onclick="window.location.href='/teachers_list'">VIEW ALL TEACHERS</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="refresh-section">
+            <button id="clearAllDataBtn" class="danger-btn">Clear All Data from database</button>
+        </div>
+    </div>
+
+
+    <script src="{{ url_for('static', filename='database.js') }}"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        {% if category == 'success' %}
+                            Swal.fire({
+                                title: 'Success!',
+                                text: '{{ message }}',
+                                icon: 'success',
+                                timer: 2000,
+                                showConfirmButton: false,
+                                background: 'var(--bg-secondary)',
+                                color: 'var(--text-primary)'
+                            });
+                        {% endif %}
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+            // Server-side session already validates staff access
+        });
+
+        // Event listeners
+        document.getElementById('clearAllDataBtn').addEventListener('click', async () => {
+            if (confirm('Are you sure you want to clear ALL data? This cannot be undone!')) {
+                const btn = document.getElementById('clearAllDataBtn');
+                const originalText = btn.textContent;
+                btn.classList.add('loading');
+                btn.disabled = true;
+                
+                const success = await window.CanteenDB.clearAllData();
+                if (success) {
+                    alert('All data cleared successfully!');
+                    location.reload();
+                } else {
+                    alert('Failed to clear data.');
+                    btn.classList.remove('loading');
+                    btn.disabled = false;
+                    btn.textContent = originalText;
+                }
+            }
+        });
+
+        document.getElementById('logoutBtn').addEventListener('click', () => {
+            fetch('/logout').finally(() => {
+                if (window.CanteenDB) {
+                    window.CanteenDB.clearSession();
+                }
+                alert('Logged out successfully!');
+                window.location.href = '/';
+            });
+        });
+
+        
+    </script>
+</body>
+</html>

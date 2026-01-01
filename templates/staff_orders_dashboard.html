@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Staff Portal - Orders Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style2.css') }}">
+    <script src="{{ url_for('static', filename='theme-toggle.js') }}"></script>
+</head>
+<body>
+    <div class="theme-switch-wrapper">
+        <span class="theme-icon">🌙</span>
+        <label class="theme-switch" for="checkbox">
+            <input type="checkbox" id="checkbox" onchange="toggleTheme()" />
+            <div class="slider round"></div>
+        </label>
+        <span class="theme-icon">☀️</span>
+    </div>
+    <button class="ai-assistant-btn" style="bottom: 20px; right: 20px;" onclick="window.location.href='/ai_assistant'" title="AI Assistant">🤖</button>
+    <button class="ai-assistant-btn" style="bottom: auto; top: 20px; right: 20px;" onclick="window.location.href='/feedback'" title="Send Feedback">💬</button>
+    
+    <div class="container staff-orders-page">
+        <div class="staff-header">
+            <button onclick="window.location.href='/staff_view'" class="back-nav-btn" style="margin-right: 20px;">← Back</button>
+            <h1>Orders Dashboard</h1>
+            <div class="header-actions">
+                <button id="backBtn" class="back-nav-btn">← Back to Menu</button>
+                <button id="logoutBtn" class="logoutbtn">Logout</button>
+            </div>
+        </div>
+
+        <div class="dashboard-content">
+            <!-- Stats Section -->
+            <div class="stats-container">
+                <div class="stat-card">
+                    <div class="stat-icon">📦</div>
+                    <div class="stat-info">
+                        <h3>Total Orders</h3>
+                        <p class="stat-value" id="totalOrdersCount">0</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">⏳</div>
+                    <div class="stat-info">
+                        <h3>Pending Orders</h3>
+                        <p class="stat-value" id="pendingOrdersCount">0</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">✅</div>
+                    <div class="stat-info">
+                        <h3>Delivered</h3>
+                        <p class="stat-value" id="deliveredOrdersCount">0</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">❌</div>
+                    <div class="stat-info">
+                        <h3>Unable to Deliver</h3>
+                        <p class="stat-value" id="undeliverableOrdersCount">0</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Download Section -->
+            <div class="download-section">
+                <h2>📥 Download Orders as PDF</h2>
+                <div class="download-controls">
+                    <select id="timePeriodSelect" class="period-select">
+                        <option value="">Select Time Period</option>
+                        <option value="day">Today</option>
+                        <option value="week">Last 7 Days</option>
+                        <option value="month">This Month</option>
+                        <option value="year">This Year</option>
+                        <option value="custom">Custom Range</option>
+                    </select>
+                    <input type="date" id="customStartDate" style="display:none;" placeholder="Start Date">
+                    <input type="date" id="customEndDate" style="display:none;" placeholder="End Date">
+                    <button id="downloadPdfBtn" class="download-btn">📄 Download PDF</button>
+                </div>
+                <p class="download-info">Select a time period to download all orders with complete details in PDF format</p>
+            </div>
+
+            <!-- Search Section -->
+            <div class="search-box-container">
+                <h2>Search Orders</h2>
+                <div class="search-controls">
+                    <input type="text" id="searchInput" placeholder="Enter Order ID or Student Name..." autocomplete="off">
+                    <button id="searchBtn" class="search-btn">🔍 Search</button>
+                    <button id="clearSearchBtn" class="clear-btn">Clear</button>
+                    <button id="refreshBtn" class="refresh-btn">🔄 Refresh</button>
+                </div>
+            </div>
+
+
+            <!-- Three Column Orders Display -->
+            <div class="three-column-orders">
+                <div class="orders-column pending-column">
+                    <h2>⏳ Pending</h2>
+                    <div id="pendingOrdersContainer" class="column-content">
+                        <p class="loading">Loading...</p>
+                    </div>
+                </div>
+
+                <div class="orders-column delivered-column">
+                    <h2>✅ Delivered</h2>
+                    <div id="deliveredOrdersContainer" class="column-content">
+                        <p class="loading">Loading...</p>
+                    </div>
+                </div>
+
+                <div class="orders-column undeliverable-column">
+                    <h2>❌ Unable to Deliver</h2>
+                    <div id="undeliverableOrdersContainer" class="column-content">
+                        <p class="loading">Loading...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='database.js') }}"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            loadOrders();
+            setupEventListeners();
+        });
+
+        let allOrders = [];
+
+        async function loadOrders() {
+            try {
+                const orders = await window.CanteenDB.getAllOrdersArray();
+                allOrders = orders;
+                updateStats(orders);
+                displayOrders(orders);
+            } catch (error) {
+                console.error('Error loading orders:', error);
+                document.getElementById('ordersContainer').innerHTML = `
+                    <div class="error-message">
+                        <p>Error loading orders: ${error.message}</p>
+                        <button onclick="loadOrders()">Try Again</button>
+                    </div>
+                `;
+            }
+        }
+
+        function updateStats(orders) {
+            const totalCount = orders.length;
+            const pendingCount = orders.filter(o => !o.status || o.status === 'pending').length;
+            const deliveredCount = orders.filter(o => o.status === 'delivered').length;
+            const undeliverableCount = orders.filter(o => o.status === 'undeliverable').length;
+            
+            document.getElementById('totalOrdersCount').textContent = totalCount;
+            document.getElementById('pendingOrdersCount').textContent = pendingCount;
+            document.getElementById('deliveredOrdersCount').textContent = deliveredCount;
+            document.getElementById('undeliverableOrdersCount').textContent = undeliverableCount;
+        }
+
+        function displayOrders(orders) {
+            if (!orders || orders.length === 0) {
+                const emptyMsg = `
+                    <div class="no-orders-message">
+                        <p>No orders found</p>
+                        <p>Orders will appear here once students place them</p>
+                    </div>
+                `;
+                document.getElementById('pendingOrdersContainer').innerHTML = emptyMsg;
+                document.getElementById('deliveredOrdersContainer').innerHTML = emptyMsg;
+                document.getElementById('undeliverableOrdersContainer').innerHTML = emptyMsg;
+                return;
+            }
+
+            // Separate orders by status
+            const pendingOrders = orders.filter(o => !o.status || o.status === 'pending');
+            const deliveredOrders = orders.filter(o => o.status === 'delivered');
+            const undeliverableOrders = orders.filter(o => o.status === 'undeliverable');
+
+            // Sort each group by order ID numerically (1 to 1875)
+            const sortByOrderId = (a, b) => {
+                const idA = parseInt(a.orderId) || 0;
+                const idB = parseInt(b.orderId) || 0;
+                return idA - idB;
+            };
+
+            pendingOrders.sort(sortByOrderId);
+            deliveredOrders.sort(sortByOrderId);
+            undeliverableOrders.sort(sortByOrderId);
+
+            // Display each column
+            displayColumn('pendingOrdersContainer', pendingOrders, 'pending');
+            displayColumn('deliveredOrdersContainer', deliveredOrders, 'delivered');
+            displayColumn('undeliverableOrdersContainer', undeliverableOrders, 'undeliverable');
+        }
+
+        function displayColumn(containerId, orders, status) {
+            const container = document.getElementById(containerId);
+            
+            if (!orders || orders.length === 0) {
+                container.innerHTML = '<p class="no-orders-in-column">No orders</p>';
+                return;
+            }
+
+            let ordersHTML = '';
+            orders.forEach(order => {
+                const orderDate = new Date(order.timestamp).toLocaleString();
+                
+                // Handle items - could be array or string
+                let itemsList = 'No items';
+                if (order.items && Array.isArray(order.items) && order.items.length > 0) {
+                    itemsList = order.items.map(item => `${item.name} x ${item.quantity}`).join(', ');
+                } else if (typeof order.items === 'string' && order.items) {
+                    itemsList = order.items;
+                }
+
+                let actionButtons = '';
+                if (status === 'pending') {
+                    actionButtons = `
+                        <button onclick="markAsDelivered('${order.orderId}')" class="action-btn delivered">✓ Delivered</button>
+                        <button onclick="markAsUndeliverable('${order.orderId}')" class="action-btn undeliverable">✗ Unable</button>
+                    `;
+                }
+
+                // Determine user type based on userClass field
+                // Teachers/Staff will have userClass = 'Staff', students will have actual class names
+                let userType = 'Student'; // Default to student
+                if (order.userClass) {
+                    const classValue = order.userClass.trim().toLowerCase();
+                    if (classValue === 'staff' || classValue === 'teacher') {
+                        userType = 'Teacher';
+                    } else {
+                        userType = 'Student';
+                    }
+                } else {
+                    userType = 'Student';
+                }
+
+                ordersHTML += `
+                    <div class="order-card-column">
+                        <div class="order-card-header">
+                            <h4>Order #${order.orderId}</h4>
+                            <span class="order-time-small">${orderDate}</span>
+                        </div>
+                        <div class="order-card-body">
+                            <p><strong>Category:</strong> ${userType}</p>
+                            <p><strong>Name:</strong> ${order.userName || 'N/A'}</p>
+                            <p><strong>Class:</strong> ${order.userClass || 'N/A'}</p>
+                            <p><strong>Items:</strong> ${itemsList}</p>
+                            <p><strong>Total:</strong> ₹${order.totalPrice || 0}</p>
+                        </div>
+                        <div class="order-card-actions">
+                            ${actionButtons}
+                        </div>
+                    </div>
+                `;
+            });
+
+            container.innerHTML = ordersHTML;
+        }
+
+        function searchOrders() {
+            const searchTerm = document.getElementById('searchInput').value.trim();
+            
+            if (!searchTerm) {
+                alert('Please enter an Order ID or Student Name to search');
+                return;
+            }
+
+            // Navigate to search results page with the search term
+            window.location.href = `/search_results?q=${encodeURIComponent(searchTerm)}`;
+        }
+
+        function clearSearch() {
+            document.getElementById('searchInput').value = '';
+            document.getElementById('searchResultsDropdown').style.display = 'none';
+            displayOrders(allOrders);
+        }
+
+        async function markAsDelivered(orderId) {
+            if (confirm('Mark this order as delivered?')) {
+                const success = await window.CanteenDB.updateOrderStatus(orderId, 'delivered');
+                if (success) {
+                    alert('Order marked as delivered!');
+                    loadOrders();
+                } else {
+                    alert('Failed to mark order as delivered.');
+                }
+            }
+        }
+
+        async function markAsUndeliverable(orderId) {
+            if (confirm('Mark this order as unable to deliver?')) {
+                const success = await window.CanteenDB.updateOrderStatus(orderId, 'undeliverable');
+                if (success) {
+                    alert('Order marked as unable to deliver!');
+                    loadOrders();
+                } else {
+                    alert('Failed to mark order.');
+                }
+            }
+        }
+
+        function setupEventListeners() {
+            document.getElementById('searchBtn').addEventListener('click', searchOrders);
+            document.getElementById('clearSearchBtn').addEventListener('click', clearSearch);
+            document.getElementById('refreshBtn').addEventListener('click', loadOrders);
+            document.getElementById('downloadPdfBtn').addEventListener('click', downloadOrdersAsPDF);
+            document.getElementById('timePeriodSelect').addEventListener('change', handleTimePeriodChange);
+            document.getElementById('backBtn').addEventListener('click', () => {
+                window.location.href = '/staff_view';
+            });
+            document.getElementById('logoutBtn').addEventListener('click', () => {
+                fetch('/logout').finally(() => {
+                    window.CanteenDB.clearSession();
+                    alert('Logged out successfully!');
+                    window.location.href = '/';
+                });
+            });
+            document.getElementById('searchInput').addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') searchOrders();
+            });
+        }
+
+        function handleTimePeriodChange() {
+            const period = document.getElementById('timePeriodSelect').value;
+            const customStartDate = document.getElementById('customStartDate');
+            const customEndDate = document.getElementById('customEndDate');
+            
+            if (period === 'custom') {
+                customStartDate.style.display = 'inline-block';
+                customEndDate.style.display = 'inline-block';
+            } else {
+                customStartDate.style.display = 'none';
+                customEndDate.style.display = 'none';
+            }
+        }
+
+        function downloadOrdersAsPDF() {
+            const period = document.getElementById('timePeriodSelect').value;
+            
+            if (!period) {
+                alert('Please select a time period');
+                return;
+            }
+
+            let params = `?period=${period}`;
+            
+            if (period === 'custom') {
+                const startDate = document.getElementById('customStartDate').value;
+                const endDate = document.getElementById('customEndDate').value;
+                
+                if (!startDate || !endDate) {
+                    alert('Please select both start and end dates');
+                    return;
+                }
+                
+                params += `&start_date=${startDate}&end_date=${endDate}`;
+            }
+
+            window.location.href = `/download_orders_pdf${params}`;
+        }
+    </script>
+</body>
+</html>

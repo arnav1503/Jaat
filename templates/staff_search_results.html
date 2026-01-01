@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Staff Portal - Search Results</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style2.css') }}">
+</head>
+<body>
+    <button class="ai-assistant-btn" style="bottom: 20px; right: 20px;" onclick="window.location.href='/ai_assistant'" title="AI Assistant">🤖</button>
+    <button class="ai-assistant-btn" style="bottom: auto; top: 20px; right: 20px;" onclick="window.location.href='/feedback'" title="Send Feedback">💬</button>
+    
+    <div class="container staff-orders-page">
+        <div class="staff-header">
+            <h1>Search Results</h1>
+            <div class="header-actions">
+                <button id="backBtn" class="back-nav-btn">← Back to Orders</button>
+                <button id="logoutBtn" class="logoutbtn">Logout</button>
+            </div>
+        </div>
+
+        <div class="dashboard-content">
+            <!-- Search Info Section -->
+            <div class="search-box-container">
+                <h2>Search: <span id="searchTermDisplay"></span></h2>
+                <div class="search-controls">
+                    <button id="newSearchBtn" class="search-btn">🔍 New Search</button>
+                    <button id="backToOrdersBtn" class="clear-btn">Back to Orders</button>
+                </div>
+            </div>
+
+            <!-- Search Results Table -->
+            <div class="search-results-full-page">
+                <div class="search-results-table-container">
+                    <table class="search-results-table">
+                        <thead>
+                            <tr>
+                                <th>Order ID</th>
+                                <th>Student Name</th>
+                                <th>Class</th>
+                                <th>Items</th>
+                                <th>Total Price</th>
+                                <th>Status</th>
+                                <th>Date/Time</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="searchResultsTableBody">
+                            <tr><td colspan="8" style="text-align: center; padding: 20px;">Loading...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='database.js') }}"></script>
+    <script>
+        let allOrders = [];
+        const searchTerm = new URLSearchParams(window.location.search).get('q') || '';
+
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('searchTermDisplay').textContent = searchTerm || 'No search term';
+            loadAndDisplayResults();
+            setupEventListeners();
+        });
+
+        async function loadAndDisplayResults() {
+            try {
+                const orders = await window.CanteenDB.getAllOrdersArray();
+                allOrders = orders;
+                displaySearchResults(orders);
+            } catch (error) {
+                console.error('Error loading orders:', error);
+                document.getElementById('searchResultsTableBody').innerHTML = `
+                    <tr><td colspan="8" style="text-align: center; padding: 20px; color: red;">Error loading orders: ${error.message}</td></tr>
+                `;
+            }
+        }
+
+        function displaySearchResults(orders) {
+            const searchLower = searchTerm.toLowerCase();
+            const filteredOrders = [];
+            
+            // Loop through each order and check for matches
+            for (let i = 0; i < orders.length; i++) {
+                const order = orders[i];
+                const orderId = String(order.orderId || '');
+                const studentName = String(order.userName || '').toLowerCase();
+                const studentClass = String(order.userClass || '').toLowerCase();
+                
+                // Match by exact order ID, or partial name/class match
+                if (orderId === searchTerm || studentName.includes(searchLower) || studentClass.includes(searchLower)) {
+                    filteredOrders.push(order);
+                }
+            }
+
+            const tableBody = document.getElementById('searchResultsTableBody');
+            
+            if (filteredOrders.length === 0) {
+                tableBody.innerHTML = '<tr><td colspan="8" style="text-align: center; padding: 30px; color: #999;">No results found for: "' + searchTerm + '"</td></tr>';
+                return;
+            }
+
+            let html = '';
+            filteredOrders.forEach(order => {
+                const orderDate = new Date(order.timestamp).toLocaleString();
+                const itemsList = order.items ? order.items.map(item => item.name).join(', ') : 'No items';
+                const statusBadge = order.status || 'pending';
+                const statusClass = statusBadge === 'pending' ? 'status-pending' : statusBadge === 'delivered' ? 'status-delivered' : 'status-undeliverable';
+                
+                let actionButtons = '';
+                if (statusBadge === 'pending') {
+                    actionButtons = `
+                        <div class="table-action-buttons">
+                            <button class="table-action-btn delivered" onclick="markAsDelivered('${order.orderId}')">✓ Delivered</button>
+                            <button class="table-action-btn undeliverable" onclick="markAsUndeliverable('${order.orderId}')">✗ Unable</button>
+                        </div>
+                    `;
+                }
+
+                html += `
+                    <tr>
+                        <td>#${order.orderId}</td>
+                        <td>${order.userName}</td>
+                        <td>${order.userClass}</td>
+                        <td>${itemsList}</td>
+                        <td>₹${order.totalPrice.toFixed(2)}</td>
+                        <td><span class="status-badge ${statusClass}">${statusBadge.toUpperCase()}</span></td>
+                        <td>${orderDate}</td>
+                        <td>${actionButtons}</td>
+                    </tr>
+                `;
+            });
+            tableBody.innerHTML = html;
+        }
+
+        async function markAsDelivered(orderId) {
+            if (confirm('Mark this order as delivered?')) {
+                const success = await window.CanteenDB.updateOrderStatus(orderId, 'delivered');
+                if (success) {
+                    alert('Order marked as delivered!');
+                    loadAndDisplayResults();
+                } else {
+                    alert('Failed to mark order as delivered.');
+                }
+            }
+        }
+
+        async function markAsUndeliverable(orderId) {
+            if (confirm('Mark this order as unable to deliver?')) {
+                const success = await window.CanteenDB.updateOrderStatus(orderId, 'undeliverable');
+                if (success) {
+                    alert('Order marked as unable to deliver!');
+                    loadAndDisplayResults();
+                } else {
+                    alert('Failed to mark order.');
+                }
+            }
+        }
+
+        function setupEventListeners() {
+            document.getElementById('backBtn').addEventListener('click', () => {
+                window.location.href = '/staff_orders';
+            });
+            document.getElementById('backToOrdersBtn').addEventListener('click', () => {
+                window.location.href = '/staff_orders';
+            });
+            document.getElementById('newSearchBtn').addEventListener('click', () => {
+                const newSearch = prompt('Enter Order ID or Student Name:');
+                if (newSearch) {
+                    window.location.href = `/search_results?q=${encodeURIComponent(newSearch)}`;
+                }
+            });
+            document.getElementById('logoutBtn').addEventListener('click', () => {
+                fetch('/logout').finally(() => {
+                    window.CanteenDB.clearSession();
+                    alert('Logged out successfully!');
+                    window.location.href = '/';
+                });
+            });
+        }
+    </script>
+</body>
+</html>

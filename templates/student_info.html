@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Profile - Canteen App</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style2.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="{{ url_for('static', filename='theme-toggle.js') }}"></script>
+</head>
+<body>
+    <div class="theme-switch-wrapper">
+        <span class="theme-icon">🌙</span>
+        <label class="theme-switch" for="checkbox">
+            <input type="checkbox" id="checkbox" onchange="toggleTheme()" />
+            <div class="slider round"></div>
+        </label>
+        <span class="theme-icon">☀️</span>
+    </div>
+    <button class="ai-assistant-btn" style="bottom: 20px; right: 20px;" onclick="window.location.href='/ai_assistant'" title="AI Assistant">🤖</button>
+    <button class="ai-assistant-btn" style="bottom: auto; top: 20px; right: 20px;" onclick="window.location.href='/feedback'" title="Send Feedback">💬</button>
+    
+    <div class="container profile-page">
+        <button onclick="window.location.href='/'" class="back-nav-btn" style="margin-bottom: 20px;">← Home</button>
+        <h1>Your Profile</h1>
+        <p><strong>Name:</strong> <span id="profileName">{{ student.get('name', student.get('Name', 'N/A')) }}</span></p>
+        <p><strong>Email:</strong> <span id="profileEmail">{{ student.get('email', student.get('Email', 'N/A')) }}</span></p>
+        <p><strong>Class:</strong> <span id="profileClass">{{ student.get('className', student.get('Class', 'N/A')) }}</span></p>
+        <p><strong>Admission ID:</strong> <span id="profileAdmission">{{ student.get('admissionId', student.get('Admission ID', 'N/A')) }}</span></p>
+
+        <div class="profile-actions">
+            <button id="goToFoodSelectionBtn">Order Food</button>
+            <button id="healthTrackingBtn">💪 Health Tracker</button>
+            <button id="logoutBtn">Logout</button>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        {% if category == 'success' %}
+                            Swal.fire({
+                                title: 'Success!',
+                                text: '{{ message }}',
+                                icon: 'success',
+                                timer: 2000,
+                                showConfirmButton: false,
+                                background: 'var(--bg-secondary)',
+                                color: 'var(--text-primary)'
+                            });
+                        {% endif %}
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+            
+            const orderBtn = document.getElementById('goToFoodSelectionBtn');
+            const healthBtn = document.getElementById('healthTrackingBtn');
+            const logoutBtn = document.getElementById('logoutBtn');
+
+            if (orderBtn) {
+                orderBtn.addEventListener('click', () => {
+                    window.location.href = '/food_selection';
+                });
+            }
+
+            if (healthBtn) {
+                healthBtn.addEventListener('click', () => {
+                    window.location.href = '/health_tracking';
+                });
+            }
+
+            if (logoutBtn) {
+                logoutBtn.addEventListener('click', () => {
+                    fetch('/logout').finally(() => {
+                        sessionStorage.clear();
+                        window.location.href = '/';
+                    });
+                });
+            }
+        });
+    </script>
+</body>
+</html>

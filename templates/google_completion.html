@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Complete Your Registration - Canteen App</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style2.css') }}">
+    <style>
+        body {
+            background: var(--gradient-accent-reverse);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .container {
+            max-width: 500px;
+            width: 100%;
+            background: white;
+            border-radius: var(--border-radius-xl);
+            padding: 40px;
+            box-shadow: var(--neumo-out);
+        }
+        h1 {
+            color: var(--text-primary);
+            margin-bottom: 10px;
+            font-size: 1.8em;
+        }
+        .subtitle {
+            color: var(--text-secondary);
+            margin-bottom: 30px;
+            font-size: 0.95em;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: var(--text-primary);
+            font-weight: 600;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .form-group input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 1em;
+            transition: border-color 0.3s;
+            box-sizing: border-box;
+        }
+        .form-group input:focus {
+            outline: none;
+            border-color: var(--accent-blue);
+        }
+        .form-group input:disabled {
+            background: var(--bg-main);
+            color: var(--text-secondary);
+        }
+        .read-only-field {
+            background: var(--bg-container);
+            padding: 12px;
+            border-radius: 8px;
+            color: var(--text-primary);
+            margin-bottom: 20px;
+            border-left: 4px solid var(--accent-blue);
+        }
+        .read-only-field .label {
+            font-size: 12px;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            margin-bottom: 5px;
+        }
+        .read-only-field .value {
+            font-size: 1.1em;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+        button {
+            width: 100%;
+            padding: 12px;
+            background: var(--gradient-accent);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(0, 169, 224, 0.4);
+        }
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        .error {
+            color: #f44336;
+            font-size: 13px;
+            margin-top: 5px;
+            display: none;
+        }
+        .error.show {
+            display: block;
+        }
+        .back-link {
+            text-align: center;
+            margin-top: 20px;
+        }
+        .back-link a {
+            color: var(--accent-blue);
+            text-decoration: none;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .back-link a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Complete Registration</h1>
+        <p class="subtitle">We extracted your info from Google. Just add a few more details!</p>
+
+        <form id="completionForm">
+            <div class="form-group">
+                <label for="nameInput">Name</label>
+                <input type="text" id="nameInput" placeholder="Your full name" required>
+                <div id="nameError" class="error"></div>
+            </div>
+
+            <div class="read-only-field">
+                <div class="label">Email</div>
+                <div class="value" id="displayEmail">-</div>
+            </div>
+
+            <div class="read-only-field">
+                <div class="label">Admission ID</div>
+                <div class="value" id="displayAdmissionId">-</div>
+            </div>
+
+            <div class="form-group">
+                <label for="classInput">Class</label>
+                <input type="text" id="classInput" placeholder="e.g., 7A, 8B" required>
+                <div id="classError" class="error"></div>
+            </div>
+
+            <div class="form-group">
+                <label for="studentIdInput">Student ID</label>
+                <input type="text" id="studentIdInput" placeholder="e.g., STU001" required>
+                <div id="studentIdError" class="error"></div>
+            </div>
+
+            <div class="form-group">
+                <label for="passwordInput">Password</label>
+                <input type="password" id="passwordInput" placeholder="Minimum 6 characters" minlength="6" required autocomplete="new-password">
+                <div id="passwordError" class="error"></div>
+            </div>
+
+            <button type="submit" id="submitBtn">Complete Registration</button>
+        </form>
+
+        <div class="back-link">
+            <a onclick="window.location.href='/'">← Back to Login</a>
+        </div>
+    </div>
+
+    <script>
+        // Get data from session storage (passed from Google auth)
+        window.addEventListener('load', () => {
+            const googleData = sessionStorage.getItem('googleRegistrationData');
+            if (!googleData) {
+                alert('Session expired. Please try again.');
+                window.location.href = '/';
+                return;
+            }
+
+            const data = JSON.parse(googleData);
+            document.getElementById('nameInput').value = data.name;
+            document.getElementById('displayEmail').textContent = data.email;
+            document.getElementById('displayAdmissionId').textContent = data.admissionId;
+        });
+
+        document.getElementById('completionForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const nameVal = document.getElementById('nameInput').value.trim();
+            const classVal = document.getElementById('classInput').value.trim();
+            const studentIdVal = document.getElementById('studentIdInput').value.trim();
+            const passwordVal = document.getElementById('passwordInput').value.trim();
+
+            // Clear errors
+            document.querySelectorAll('.error').forEach(el => el.classList.remove('show'));
+
+            // Validation
+            let valid = true;
+            if (!nameVal) {
+                showError('nameError', 'Name is required');
+                valid = false;
+            }
+            if (!classVal) {
+                showError('classError', 'Class is required');
+                valid = false;
+            }
+            if (!studentIdVal) {
+                showError('studentIdError', 'Student ID is required');
+                valid = false;
+            }
+            if (!passwordVal || passwordVal.length < 6) {
+                showError('passwordError', 'Password must be at least 6 characters');
+                valid = false;
+            }
+
+            if (!valid) return;
+
+            // Get data from session
+            const googleData = JSON.parse(sessionStorage.getItem('googleRegistrationData'));
+
+            // Submit registration
+            try {
+                const response = await fetch('/student_register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        name: nameVal,
+                        email: googleData.email,
+                        admissionId: googleData.admissionId,
+                        className: classVal,
+                        userId: googleData.userId,
+                        password: passwordVal
+                    })
+                });
+
+                const result = await response.json();
+                if (result.success) {
+                    // Store user data for later use
+                    sessionStorage.setItem('currentUser', JSON.stringify(result.user));
+                    sessionStorage.removeItem('googleRegistrationData');
+                    window.location.href = '/student_info';
+                } else {
+                    alert('Registration failed: ' + result.message);
+                }
+            } catch (error) {
+                alert('Error during registration: ' + error.message);
+            }
+        });
+
+        function showError(elementId, message) {
+            const errorEl = document.getElementById(elementId);
+            errorEl.textContent = message;
+            errorEl.classList.add('show');
+        }
+    </script>
+</body>
+</html>

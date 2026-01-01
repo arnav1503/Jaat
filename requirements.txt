@@ -1,0 +1,12 @@
+Flask>=3.1.0
+flask-login==0.6.3
+gunicorn==21.2.0
+python-dotenv==1.0.0
+requests==2.31.0
+oauthlib==3.2.2
+gspread
+google-auth
+openai
+werkzeug
+reportlab
+google-genai

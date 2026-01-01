@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Thank You! - Canteen App</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style2.css') }}">
+    <script src="{{ url_for('static', filename='theme-toggle.js') }}"></script>
+</head>
+<body>
+    <button class="theme-toggle" onclick="toggleTheme()" title="Toggle Dark Mode">🌙</button>
+    <button class="ai-assistant-btn" style="bottom: 20px; right: 20px;" onclick="window.location.href='/ai_assistant'" title="AI Assistant">🤖</button>
+    <button class="ai-assistant-btn" style="bottom: auto; top: 20px; right: 20px;" onclick="window.location.href='/feedback'" title="Send Feedback">💬</button>
+    
+    <div class="container thank-you-page">
+        <h1>🎉 Thank You for Your Order! 🎉</h1>
+        <p>Your order has been placed successfully!</p>
+
+        <div id="orderDetails"></div>
+
+        <div class="thank-you-actions">
+            <button id="backToProfileBtn">Back to Profile</button>
+            <button id="logoutBtn">Logout</button>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='database.js') }}"></script>
+    <script>
+        // Load and display the latest order details
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Get order details from sessionStorage
+            const orderId = sessionStorage.getItem('lastOrderId');
+            const orderItems = sessionStorage.getItem('lastOrderItems');
+            const orderTotal = sessionStorage.getItem('lastOrderTotal');
+            const nutritionPoints = parseInt(sessionStorage.getItem('lastOrderNutritionPoints')) || 0;
+            const currentUser = sessionStorage.getItem('currentUser');
+            
+            let userName = 'Guest';
+            let userClass = '';
+            
+            if (currentUser) {
+                try {
+                    const userData = JSON.parse(currentUser);
+                    userName = userData.name || 'Guest';
+                    userClass = userData.className || userData.type || '';
+                } catch (e) {
+                    console.error('Error parsing user data:', e);
+                }
+            }
+            
+            if (orderId && orderItems && orderTotal) {
+                try {
+                    const items = JSON.parse(orderItems);
+                    const itemsHtml = items.map(item => 
+                        `<li style="padding: 8px 0; border-bottom: 1px solid #eee;">
+                            <strong>${item.name}</strong> x ${item.quantity} = ₹${(item.price * item.quantity).toFixed(2)}
+                            <span style="color: #ff6b6b; margin-left: 10px; font-size: 0.9em;">⭐ ${item.nutritionPoints * item.quantity} pts</span>
+                        </li>`
+                    ).join('');
+                    
+                    document.getElementById('orderDetails').innerHTML = `
+                        <div style="background: linear-gradient(135deg, #fff, #f8f9fa); padding: 2rem; border-radius: 16px; margin: 2rem 0; box-shadow: 0 4px 20px rgba(0,0,0,0.1);">
+                            <div style="text-align: center; margin-bottom: 2rem;">
+                                <div style="display: inline-block; background: linear-gradient(135deg, #00A9E0, #F000B8); color: white; padding: 1rem 2rem; border-radius: 50px; font-size: 1.5rem; font-weight: bold; box-shadow: 0 4px 15px rgba(0,169,224,0.3);">
+                                    Order #${orderId}
+                                </div>
+                            </div>
+                            
+                            <div style="background: white; padding: 1.5rem; border-radius: 12px; margin-bottom: 1rem;">
+                                <p style="margin: 0.5rem 0;"><strong>Customer:</strong> ${userName}</p>
+                                ${userClass ? `<p style="margin: 0.5rem 0;"><strong>Class:</strong> ${userClass}</p>` : ''}
+                                <p style="margin: 0.5rem 0;"><strong>Status:</strong> <span style="color: #FFA500; font-weight: bold;">⏳ Pending</span></p>
+                            </div>
+                            
+                            <div style="background: white; padding: 1.5rem; border-radius: 12px; margin-bottom: 1rem;">
+                                <h4 style="margin-top: 0; color: #333;">Items Ordered:</h4>
+                                <ul style="list-style: none; padding: 0; margin: 0;">
+                                    ${itemsHtml}
+                                </ul>
+                            </div>
+                            
+                            <div style="background: linear-gradient(135deg, #00A9E0, #F000B8); color: white; padding: 1.5rem; border-radius: 12px; text-align: center; margin-bottom: 1rem;">
+                                <p style="font-size: 1.5rem; font-weight: bold; margin: 0;">
+                                    Total: ₹${parseFloat(orderTotal).toFixed(2)}
+                                </p>
+                            </div>
+                            
+                            <div style="background: linear-gradient(135deg, #ff6b6b, #ff5252); color: white; padding: 1.5rem; border-radius: 12px; text-align: center;">
+                                <p style="margin: 0.5rem 0; font-size: 1.1rem;">🎉 Nutrition Points Earned</p>
+                                <p style="font-size: 2.5rem; font-weight: bold; margin: 0.5rem 0;">⭐ +${nutritionPoints}</p>
+                                <p style="margin: 0.5rem 0; font-size: 0.95rem;">Added to your total nutrition points</p>
+                            </div>
+                            
+                            <p style="margin-top: 1.5rem; text-align: center; color: #28a745; font-weight: bold; font-size: 1.1rem;">
+                                ✓ Your order has been received and is being processed!
+                            </p>
+                            
+                            <p style="margin-top: 1rem; text-align: center; color: #666; font-size: 0.9rem;">
+                                Please save your order number <strong>#${orderId}</strong> for tracking
+                            </p>
+                        </div>
+                    `;
+                    
+                    // Clear the stored order data after displaying
+                    sessionStorage.removeItem('lastOrderId');
+                    sessionStorage.removeItem('lastOrderItems');
+                    sessionStorage.removeItem('lastOrderTotal');
+                    sessionStorage.removeItem('lastOrderNutritionPoints');
+                } catch (error) {
+                    console.error('Error displaying order:', error);
+                    showFallbackMessage();
+                }
+            } else {
+                showFallbackMessage();
+            }
+        });
+        
+        function showFallbackMessage() {
+            document.getElementById('orderDetails').innerHTML = `
+                <div style="background: white; padding: 2rem; border-radius: 12px; margin: 2rem 0; text-align: center; box-shadow: 0 4px 20px rgba(0,0,0,0.1);">
+                    <h3 style="color: #28a745;">📋 Order Confirmation</h3>
+                    <p>Your order has been successfully submitted!</p>
+                    <p style="color: #666; margin-top: 1rem;">Check your profile for order details.</p>
+                </div>
+            `;
+        }
+
+        // Navigation functions
+        document.getElementById('backToProfileBtn').addEventListener('click', () => {
+            const currentUser = sessionStorage.getItem('currentUser');
+            if (currentUser) {
+                try {
+                    const userData = JSON.parse(currentUser);
+                    if (userData.type === 'teacher') {
+                        window.location.href = '/teacher_info';
+                    } else {
+                        window.location.href = '/student_info';
+                    }
+                } catch {
+                    window.location.href = '/';
+                }
+            } else {
+                window.location.href = '/';
+            }
+        });
+
+        document.getElementById('logoutBtn').addEventListener('click', () => {
+            sessionStorage.clear();
+            window.location.href = '/logout';
+        });
+    </script>
+</body>
+</html>

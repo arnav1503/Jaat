@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Canteen App - Welcome!</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style2.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        if (savedTheme === 'dark') {
+            document.documentElement.classList.add('dark-mode');
+        }
+    </script>
+    <style>
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            max-width: 400px;
+            padding: 16px 24px;
+            border-radius: 20px;
+            z-index: 9999;
+            animation: slideIn 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+            display: none;
+            font-weight: 600;
+            box-shadow: 8px 8px 20px rgba(0,0,0,0.15), -8px -8px 20px rgba(255,255,255,0.8);
+            backdrop-filter: blur(10px);
+        }
+        .notification.show { display: block; }
+        .notification.success { background: linear-gradient(135deg, #4caf50 0%, #45a049 100%); color: white; }
+        .notification.error { background: linear-gradient(135deg, #f44336 0%, #e53935 100%); color: white; }
+        .notification.info { background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%); color: white; }
+        @keyframes slideIn { from { transform: translateX(500px) rotateY(90deg); opacity: 0; } to { transform: translateX(0) rotateY(0); opacity: 1; } }
+
+        .form-group { margin: 6px 0; animation: fadeInUp 0.6s ease-out backwards; }
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+        .form-group label { display: block; margin-bottom: 8px; font-weight: 600; color: var(--text-secondary); font-size: 13px; text-transform: uppercase; letter-spacing: 0.8px; }
+        .form-group input { width: 100%; box-sizing: border-box; border: 1px solid var(--shadow-dark) !important; background-color: var(--input-bg) !important; color: var(--text-primary) !important; }
+        .form-group input:focus { outline: none; border: 2px solid var(--accent-blue) !important; transform: scale(1.01); transition: all 0.3s ease; }
+
+        .error-message { color: #f44336; font-size: 12px; margin-top: 6px; display: none; font-weight: 600; }
+        .error-message.show { display: block; animation: shake 0.3s; }
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
+    </style>
+</head>
+<body>
+    <button class="ai-assistant-btn" style="bottom: 20px; right: 20px;" onclick="window.location.href='/ai_assistant'" title="AI Assistant">🤖</button>
+    <button class="ai-assistant-btn" style="bottom: auto; top: 20px; right: 20px;" onclick="window.location.href='/feedback'" title="Send Feedback">💬</button>
+
+    <div id="notification" class="notification"></div>
+
+    <div class="container welcome-page">
+        <h1>Welcome to the Canteen App!</h1>
+        <p>Choose your option to get started:</p>
+        <div class="main-options auth-options">
+            <button class="main-option-btn" onclick="showSection('loginSection')">Student Login</button>
+            <button class="main-option-btn" onclick="showSection('studentRegistrarSection')">STUDENT REGISTER</button>
+            <button class="main-option-btn" onclick="showSection('teacherLoginSection')">Teacher Login</button>
+            <button class="main-option-btn" onclick="showSection('teacherRegisterSection')">TEACHER REGISTER</button>
+            <button class="main-option-btn" onclick="showSection('staffSection')">Staff Login</button>
+        </div>
+
+        <div class="auth-section hidden" id="loginSection">
+            <h2>Student Login</h2>
+            <form id="studentLoginForm" onsubmit="event.preventDefault(); handleStudentLogin();">
+                <div class="form-group">
+                    <label>Student ID</label>
+                    <input type="text" id="loginId" placeholder="Enter your Student ID" required autocomplete="username">
+                    <div id="loginIdError" class="error-message"></div>
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" id="loginPassword" placeholder="Enter your Password" required autocomplete="current-password">
+                    <div id="loginPasswordError" class="error-message"></div>
+                </div>
+                <button type="submit">Login</button>
+            </form>
+            <button class="back-btn" onclick="showSection('main')">Back to Main</button>
+        </div>
+
+        <div class="auth-section hidden" id="studentRegistrarSection">
+            <h2>Student Register</h2>
+            <form id="studentRegisterForm" onsubmit="event.preventDefault(); handleStudentRegister();">
+                <div class="form-group"><label>Email</label><input type="email" id="manualEmail" required autocomplete="email"></div>
+                <div class="form-group"><label>Full Name</label><input type="text" id="manualName" required autocomplete="name"></div>
+                <div class="form-group"><label>Admission ID</label><input type="text" id="manualAdmissionId" required></div>
+                <div class="form-group"><label>Class</label><input type="text" id="manualClass" required></div>
+                <div class="form-group"><label>Student ID</label><input type="text" id="manualStudentId" required autocomplete="username"></div>
+                <div class="form-group"><label>Password</label><input type="password" id="manualPassword" required minlength="6" autocomplete="new-password"></div>
+                <button type="submit">Register</button>
+            </form>
+            <button class="back-btn" onclick="showSection('main')">Back to Main</button>
+        </div>
+
+        <div class="auth-section hidden" id="teacherLoginSection">
+            <h2>Teacher Login</h2>
+            <form id="teacherLoginForm" onsubmit="event.preventDefault(); handleTeacherLogin();">
+                <div class="form-group"><label>Staff ID</label><input type="text" id="teacherLoginId" required autocomplete="username"></div>
+                <div class="form-group"><label>Password</label><input type="password" id="teacherLoginPassword" required autocomplete="current-password"></div>
+                <button type="submit">Login</button>
+            </form>
+            <button class="back-btn" onclick="showSection('main')">Back to Main</button>
+        </div>
+
+        <div class="auth-section hidden" id="teacherRegisterSection">
+            <h2>Teacher Register</h2>
+            <form id="teacherRegisterForm" onsubmit="event.preventDefault(); handleTeacherRegister();">
+                <div class="form-group"><label>Full Name</label><input type="text" id="teacherName" required autocomplete="name"></div>
+                <div class="form-group"><label>Staff ID</label><input type="text" id="teacherStaffId" required autocomplete="username"></div>
+                <div class="form-group"><label>Email</label><input type="email" id="teacherEmail" required autocomplete="email"></div>
+                <div class="form-group"><label>Password</label><input type="password" id="teacherPassword" required minlength="6" autocomplete="new-password"></div>
+                <button type="submit">Register</button>
+            </form>
+            <button class="back-btn" onclick="showSection('main')">Back to Main</button>
+        </div>
+
+        <div class="auth-section hidden" id="staffSection">
+            <h2>Staff Login</h2>
+            <form id="staffLoginForm" onsubmit="event.preventDefault(); handleStaffLogin();">
+                <div class="form-group"><label>Staff ID</label><input type="text" id="staffId" required autocomplete="username"></div>
+                <div class="form-group"><label>Password</label><input type="password" id="staffPassword" required autocomplete="current-password"></div>
+                <button type="submit">Login</button>
+            </form>
+            <button class="back-btn" onclick="showSection('main')">Back to Main</button>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='theme-toggle.js') }}"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        {% if category == 'success' %}
+                            Swal.fire({
+                                title: 'Success!',
+                                text: '{{ message }}',
+                                icon: 'success',
+                                timer: 2000,
+                                showConfirmButton: false,
+                                background: 'var(--bg-secondary)',
+                                color: 'var(--text-primary)'
+                            });
+                        {% endif %}
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            const studentSection = document.getElementById('loginSection');
+            if (!studentSection.classList.contains('hidden')) {
+                document.getElementById('loginId').focus();
+            }
+        });
+
+        function showNotification(msg, type='info') {
+            const el = document.getElementById('notification');
+            el.textContent = msg;
+            el.className = `notification ${type} show`;
+            setTimeout(() => el.classList.remove('show'), 4000);
+        }
+
+        function showSection(id) {
+            document.querySelectorAll('.auth-section').forEach(s => s.classList.add('hidden'));
+            document.querySelector('.main-options').classList.add('hidden');
+            if(id === 'main') {
+                document.querySelector('.main-options').classList.remove('hidden');
+            } else {
+                const section = document.getElementById(id);
+                section.classList.remove('hidden');
+                // Auto-focus first input in the shown section
+                const firstInput = section.querySelector('input');
+                if (firstInput) firstInput.focus();
+            }
+        }
+
+        async function handleStudentLogin() {
+            const userId = document.getElementById('loginId').value.trim();
+            const password = document.getElementById('loginPassword').value.trim();
+            
+            if (!userId || !password) {
+                showNotification('Please enter both ID and Password', 'error');
+                return;
+            }
+
+            const btn = event.target;
+            const originalText = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Processing...';
+
+            try {
+                const res = await fetch('/student_login', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({userId, password})
+                });
+                if(res.ok) { window.location.href = '/student_info'; }
+                else { 
+                    showNotification('Invalid credentials', 'error'); 
+                    btn.disabled = false;
+                    btn.innerHTML = originalText;
+                }
+            } catch(e) { 
+                showNotification('Login failed', 'error'); 
+                btn.disabled = false;
+                btn.innerHTML = originalText;
+            }
+        }
+
+        async function handleTeacherLogin() {
+            const staffId = document.getElementById('teacherLoginId').value.trim();
+            const password = document.getElementById('teacherLoginPassword').value.trim();
+            
+            if (!staffId || !password) {
+                showNotification('Please enter both ID and Password', 'error');
+                return;
+            }
+
+            const btn = event.target;
+            const originalText = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Processing...';
+
+            try {
+                const res = await fetch('/teacher_login', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({staffId, password})
+                });
+                if(res.ok) { window.location.href = '/staff_view'; }
+                else { 
+                    showNotification('Invalid credentials', 'error'); 
+                    btn.disabled = false;
+                    btn.innerHTML = originalText;
+                }
+            } catch(e) { 
+                showNotification('Login failed', 'error'); 
+                btn.disabled = false;
+                btn.innerHTML = originalText;
+            }
+        }
+
+        async function handleStaffLogin() {
+            const staffId = document.getElementById('staffId').value.trim();
+            const password = document.getElementById('staffPassword').value.trim();
+            
+            if (!staffId || !password) {
+                showNotification('Please enter both ID and Password', 'error');
+                return;
+            }
+
+            const btn = event.target;
+            const originalText = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Processing...';
+
+            try {
+                const res = await fetch('/staff_login', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({staffId, password})
+                });
+                if(res.ok) { window.location.href = '/staff_view'; }
+                else { 
+                    showNotification('Invalid credentials', 'error'); 
+                    btn.disabled = false;
+                    btn.innerHTML = originalText;
+                }
+            } catch(e) { 
+                showNotification('Login failed', 'error'); 
+                btn.disabled = false;
+                btn.innerHTML = originalText;
+            }
+        }
+
+        async function handleStudentRegister() {
+            const email = document.getElementById('manualEmail').value.trim();
+            const name = document.getElementById('manualName').value.trim();
+            const admissionId = document.getElementById('manualAdmissionId').value.trim();
+            const className = document.getElementById('manualClass').value.trim();
+            const studentId = document.getElementById('manualStudentId').value.trim();
+            const password = document.getElementById('manualPassword').value.trim();
+
+            if (!email || !name || !admissionId || !className || !studentId || !password) {
+                showNotification('All fields are required', 'error');
+                return;
+            }
+
+            if (password.length < 6) {
+                showNotification('Password must be at least 6 characters', 'error');
+                return;
+            }
+
+            const btn = event.target;
+            const originalText = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Processing...';
+
+            const data = { email, name, admissionId, className, studentId, password };
+            try {
+                const res = await fetch('/student_register', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(data)
+                });
+                if(res.ok) { 
+                    showNotification('Registration successful!', 'success'); 
+                    setTimeout(() => showSection('loginSection'), 1500);
+                } else { 
+                    const errData = await res.json();
+                    showNotification(errData.message || 'Registration failed', 'error'); 
+                    btn.disabled = false;
+                    btn.innerHTML = originalText;
+                }
+            } catch(e) { 
+                showNotification('Error during registration', 'error'); 
+                btn.disabled = false;
+                btn.innerHTML = originalText;
+            }
+        }
+
+        async function handleTeacherRegister() {
+            const name = document.getElementById('teacherName').value.trim();
+            const teacherStaffId = document.getElementById('teacherStaffId').value.trim();
+            const email = document.getElementById('teacherEmail').value.trim();
+            const password = document.getElementById('teacherPassword').value.trim();
+
+            if (!name || !teacherStaffId || !email || !password) {
+                showNotification('All fields are required', 'error');
+                return;
+            }
+
+            if (password.length < 6) {
+                showNotification('Password must be at least 6 characters', 'error');
+                return;
+            }
+
+            const btn = event.target;
+            const originalText = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Processing...';
+
+            const data = { name, staffId: teacherStaffId, email, password };
+            try {
+                const res = await fetch('/teacher_register', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(data)
+                });
+                if(res.ok) { 
+                    showNotification('Registration successful!', 'success'); 
+                    setTimeout(() => showSection('teacherLoginSection'), 1500);
+                } else { 
+                    const errData = await res.json();
+                    showNotification(errData.message || 'Registration failed', 'error'); 
+                    btn.disabled = false;
+                    btn.innerHTML = originalText;
+                }
+            } catch(e) { 
+                showNotification('Error during registration', 'error'); 
+                btn.disabled = false;
+                btn.innerHTML = originalText;
+            }
+        }
+    </script>
+</body>
+</html>

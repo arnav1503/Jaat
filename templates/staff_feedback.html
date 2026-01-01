@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Feedback - Staff Portal</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style2.css') }}">
+    <script src="{{ url_for('static', filename='theme-toggle.js') }}"></script>
+    <style>
+        .staff-feedback-page {
+            background-color: var(--bg-main);
+            min-height: 100vh;
+            padding: 2rem 1rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .feedback-header {
+            background: var(--gradient-accent);
+            color: white;
+            padding: 2.5rem;
+            border-radius: var(--border-radius-xl);
+            margin-bottom: 2rem;
+            box-shadow: 0 15px 40px rgba(0, 169, 224, 0.2);
+            animation: slideUpFade 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+        }
+
+        .feedback-header h1 {
+            margin: 0 0 1.5rem 0;
+            font-size: 2.5rem;
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 800;
+            letter-spacing: 0.5px;
+            color: white;
+            background: none;
+            -webkit-background-clip: unset;
+            background-clip: unset;
+            -webkit-text-fill-color: white;
+            filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+        }
+
+        .feedback-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-top: 1.5rem;
+        }
+
+        .stat-item {
+            background: rgba(255, 255, 255, 0.15);
+            padding: 1.5rem;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: all var(--transition-speed);
+        }
+
+        .stat-item:hover {
+            background: rgba(255, 255, 255, 0.25);
+            transform: translateY(-2px);
+        }
+
+        .stat-item .label {
+            font-size: 0.85rem;
+            opacity: 0.95;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            font-weight: 600;
+        }
+
+        .stat-item .value {
+            font-size: 2rem;
+            font-weight: 800;
+            margin-top: 0.5rem;
+            font-family: 'Orbitron', sans-serif;
+        }
+
+        .feedback-container {
+            background: white;
+            border-radius: var(--border-radius-xl);
+            padding: 2.5rem;
+            box-shadow: var(--neumo-out);
+        }
+
+        .feedback-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .feedback-card {
+            background: linear-gradient(135deg, #f9fafb 0%, #f0f1f5 100%);
+            padding: 1.5rem;
+            border-radius: 15px;
+            border-left: 5px solid var(--accent-blue);
+            transition: all var(--transition-speed);
+            animation: slideIn 0.5s ease-out backwards;
+            box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.5), 0 5px 15px rgba(0, 0, 0, 0.05);
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .feedback-card:hover {
+            box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.5), 0 15px 35px rgba(0, 169, 224, 0.15);
+            transform: translateY(-3px);
+            border-left-color: var(--accent-magenta);
+        }
+
+        .feedback-header-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 1rem;
+            gap: 1rem;
+        }
+
+        .feedback-user {
+            flex: 1;
+        }
+
+        .feedback-user .name {
+            font-weight: 700;
+            color: var(--text-primary);
+            font-size: 1rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .feedback-user .email {
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+        }
+
+        .feedback-date {
+            color: var(--text-secondary);
+            font-size: 0.8rem;
+            text-align: right;
+            white-space: nowrap;
+        }
+
+        .feedback-message {
+            color: var(--text-primary);
+            font-size: 0.95rem;
+            line-height: 1.6;
+            padding: 1rem;
+            background: white;
+            border-radius: 10px;
+            border-left: 3px solid var(--accent-blue);
+            margin-top: 1rem;
+            box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.05);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 4rem 2rem;
+            color: var(--text-secondary);
+        }
+
+        .empty-state-icon {
+            font-size: 4rem;
+            margin-bottom: 1.5rem;
+            opacity: 0.7;
+        }
+
+        .empty-state p {
+            font-size: 1.1rem;
+            margin: 0;
+            color: var(--text-secondary);
+        }
+
+        .back-btn {
+            background: var(--gradient-accent);
+            color: white;
+            border: none;
+            padding: 12px 28px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-weight: 700;
+            transition: all var(--transition-speed);
+            margin-bottom: 2rem;
+            display: inline-block;
+            box-shadow: 0 8px 20px rgba(0, 169, 224, 0.3);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-size: 0.9rem;
+        }
+
+        .back-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 30px rgba(0, 169, 224, 0.4);
+        }
+
+        .back-btn:active {
+            transform: translateY(-1px);
+            box-shadow: 0 5px 15px rgba(0, 169, 224, 0.3);
+        }
+
+        .ai-assistant-btn {
+            position: fixed;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: var(--gradient-accent);
+            border: none;
+            color: white;
+            font-size: 1.5rem;
+            cursor: pointer;
+            box-shadow: 0 8px 25px rgba(0, 169, 224, 0.3);
+            transition: all var(--transition-speed);
+            font-family: 'Montserrat', sans-serif;
+        }
+
+        .ai-assistant-btn:hover {
+            transform: scale(1.12);
+            box-shadow: 0 12px 35px rgba(0, 169, 224, 0.4);
+        }
+
+        .ai-assistant-btn:active {
+            transform: scale(0.95);
+        }
+
+        @media (max-width: 768px) {
+            .staff-feedback-page {
+                padding: 1.5rem 1rem;
+            }
+
+            .feedback-header {
+                padding: 1.5rem;
+            }
+
+            .feedback-header h1 {
+                font-size: 1.8rem;
+            }
+
+            .feedback-stats {
+                grid-template-columns: 1fr;
+            }
+
+            .feedback-container {
+                padding: 1.5rem;
+            }
+
+            .feedback-header-info {
+                flex-direction: column;
+            }
+
+            .feedback-date {
+                text-align: left;
+                margin-top: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <button class="ai-assistant-btn" style="bottom: 20px; right: 20px;" onclick="window.location.href='/ai_assistant'" title="AI Assistant">🤖</button>
+    <button class="ai-assistant-btn" style="bottom: auto; top: 20px; right: 20px;" onclick="window.location.href='/feedback'" title="Send Feedback">💬</button>
+
+    <div class="staff-feedback-page">
+        <div class="feedback-header">
+            <button onclick="window.location.href='/staff_view'" class="back-btn" style="margin-bottom: 2rem;">← Back</button>
+            <h1>💬 User Feedback Management</h1>
+            <div class="feedback-stats">
+                <div class="stat-item">
+                    <div class="label">Total Feedback</div>
+                    <div class="value">{{ total }}</div>
+                </div>
+                <div class="stat-item">
+                    <div class="label">Latest Feedback</div>
+                    <div class="value" id="latestTime">Just now</div>
+                </div>
+            </div>
+        </div>
+
+        <button class="back-btn" onclick="window.location.href='/staff_view'">← Back to Dashboard</button>
+
+        <div class="feedback-container">
+            {% if feedback_list %}
+                <div class="feedback-list">
+                    {% for feedback in feedback_list %}
+                        <div class="feedback-card" style="animation-delay: 0.1s">
+                            <div class="feedback-header-info">
+                                <div class="feedback-user">
+                                    <div class="name">{{ feedback.name }}</div>
+                                    <div class="email">{{ feedback.email }}</div>
+                                    {% if feedback.classname %}<div style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 0.25rem;">Class: {{ feedback.classname }}</div>{% endif %}
+                                </div>
+                                <div class="feedback-date">
+                                    {% if feedback.rating %}<div style="font-size: 1.1rem; font-weight: bold; color: var(--accent-blue);">★ {{ feedback.rating }}/5</div>{% endif %}
+                                    <div>{{ feedback.date }}</div>
+                                    <div>{{ feedback.time }}</div>
+                                </div>
+                            </div>
+                            <div class="feedback-message">
+                                {{ feedback.message }}
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="empty-state">
+                    <div class="empty-state-icon">📭</div>
+                    <p>No feedback received yet. Keep improving your service!</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</body>
+</html>

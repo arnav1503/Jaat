@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>404 - Page Not Found</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style2.css') }}">
+    <style>
+        body { display: flex; align-items: center; justify-content: center; min-height: 100vh; text-align: center; background: var(--bg-main); }
+        .error-container { padding: 3rem; background: var(--bg-secondary); border-radius: 20px; box-shadow: var(--neumo-out); max-width: 500px; }
+        h1 { font-size: 6rem; margin: 0; color: var(--accent-magenta); font-family: 'Orbitron', sans-serif; }
+        p { font-size: 1.2rem; color: var(--text-secondary); margin: 1rem 0 2rem; }
+    </style>
+</head>
+<body>
+    <div class="error-container">
+        <h1>404</h1>
+        <h2>Lost in Space?</h2>
+        <p>The page you're looking for doesn't exist or has been moved.</p>
+        <button class="btn btn-primary" onclick="window.location.href='/'">Go Home</button>
+    </div>
+</body>
+</html>

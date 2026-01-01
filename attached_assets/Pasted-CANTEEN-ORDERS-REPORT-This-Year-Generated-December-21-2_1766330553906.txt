@@ -1,0 +1,62 @@
+CANTEEN ORDERS REPORT
+      
+ This Year
+ Generated: December 21, 2025 at 05:32 AM
+ TOTAL ORDERS PENDING DELIVERED UNABLE
+1875 1875 0 0
+ Date Range: December 21, 2025 to December 21, 2025
+ December 21, 2025 (1875 orders)
+ ID Time Student Class Items Amount Status
+N/A 05:32 N/A N/A N/A 0.00 Pending
+N/A 05:32 N/A N/A N/A 0.00 Pending
+N/A 05:32 N/A N/A N/A 0.00 Pending
+N/A 05:32 N/A N/A N/A 0.00 Pending
+N/A 05:32 N/A N/A N/A 0.00 Pending
+N/A 05:32 N/A N/A N/A 0.00 Pending
+N/A 05:32 N/A N/A N/A 0.00 Pending
+N/A 05:32 N/A N/A N/A 0.00 Pending
+N/A 05:32 N/A N/A N/A 0.00 Pending
+N/A 05:32 N/A N/A N/A 0.00 Pending
+N/A 05:32 N/A N/A N/A 0.00 Pending
+N/A 05:32 N/A N/A N/A 0.00 Pending
+N/A 05:32 N/A N/A N/A 0.00 Pending
+N/A 05:32 N/A N/A N/A 0.00 Pending
+N/A 05:32 N/A N/A N/A 0.00 Pending
+N/A 05:32 N/A N/A N/A 0.00 Pending
+N/A 05:32 N/A N/A N/A 0.00 Pending
+N/A 05:32 N/A N/A N/A 0.00 Pending
+N/A 05:32 N/A N/A N/A 0.00 Pending
+N/A 05:32 N/A N/A N/A 0.00 Pending
+N/A 05:32 N/A N/A N/A 0.00 Pending
+N/A 05:32 N/A N/A N/A 0.00 Pending
+N/A 05:32 N/A N/A N/A 0.00 Pending
+N/A 05:32 N/A N/A N/A 0.00 Pending
+N/A 05:32 N/A N/A N/A 0.00 Pending
+N/A 05:32 N/A N/A N/A 0.00 Pending
+N/A 05:32 N/A N/A N/A 0.00 Pending
+N/A 05:32 N/A N/A N/A 0.00 Pending
+N/A 05:32 N/A N/A N/A 0.00 Pending
+N/A 05:32 N/A N/A N/A 0.00 Pending
+N/A 05:32 N/A N/A N/A 0.00 Pending
+N/A 05:32 N/A N/A N/A 0.00 Pending
+N/A 05:32 N/A N/A N/A 0.00 Pending
+N/A 05:32 N/A N/A N/A 0.00 Pending
+N/A 05:32 N/A N/A N/A 0.00 Pending
+N/A 05:32 N/A N/A N/A 0.00 Pending
+N/A 05:32 N/A N/A N/A 0.00 Pending
+N/A 05:32 N/A N/A N/A 0.00 Pending
+N/A 05:32 N/A N/A N/A 0.00 Pending
+N/A 05:32 N/A N/A N/A 0.00 Pending
+N/A 05:32 N/A N/A N/A 0.00 Pending
+N/A 05:32 N/A N/A N/A 0.00 Pending
+N/A 05:32 N/A N/A N/A 0.00 Pending
+N/A 05:32 N/A N/A N/A 0.00 Pending
+N/A 05:32 N/A N/A N/A 0.00 Pending
+N/A 05:32 N/A N/A N/A 0.00 Pending
+N/A 05:32 N/A N/A N/A 0.00 Pending
+N/A 05:32 N/A N/A N/A 0.00 Pending
+N/A 05:32 N/A N/A N/A 0.00 Pending
+N/A 05:32 N/A N/A N/A 0.00 Pending
+N/A 05:32 N/A N/A N/A 0.00 Pending
+N/A 05:32 N/A N/A N/A 0.00 Pending
+N/A 05:32 N/A N/A N/A 0.00 Pendin

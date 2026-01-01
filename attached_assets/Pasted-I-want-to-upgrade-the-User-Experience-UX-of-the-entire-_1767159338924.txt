@@ -1,0 +1,55 @@
+I want to upgrade the User Experience (UX) of the entire application to be best-in-class.
+
+Role: Act as a Senior Frontend Engineer and UX Specialist. Constraint: Do not change the visual style (colors/branding), but you MUST improve the interaction design and usability.
+
+Please scan all templates and JavaScript files to implement the following 5 Pillars of Great UX:
+
+1. The "100ms Rule" (Instant Feedback)
+
+Interaction: Users must feel an immediate response to every click.
+
+Task: Add a Loading State to ALL buttons that submit forms or fetch data.
+
+Behavior: On click, immediately disable the button and change text to "Processing..." or show a spinner.
+
+Goal: Prevent double-submissions and reassure the user the app is working.
+
+2. Non-Blocking Notifications (Toast System)
+
+Interaction: Stop using browser alert() or static text for messages.
+
+Task: Implement a Toast Notification System (slide-in messages at the top-right or bottom-center).
+
+Behavior: Flash messages (Success/Error) should appear automatically, stay for 3-5 seconds, and then fade out without requiring a user click to dismiss.
+
+3. Frictionless Forms (Smart Inputs)
+
+Interaction: Typing should be effortless.
+
+Task: Optimize all login and data entry forms:
+
+Add autofocus to the first input field of every form (e.g., focus 'Email' on page load).
+
+Ensure the Enter key submits the form (fix any buttons that are type="button" instead of type="submit").
+
+Add autocomplete attributes (e.g., autocomplete="username" or autocomplete="current-password") so browsers can help fill details.
+
+4. Empty State Management
+
+Interaction: Never show a blank screen or empty table.
+
+Task: Update all Jinja2 loops (lists of orders, students, staff).
+
+Logic: Use {% else %} in loops to render a friendly "No items found" block with a call-to-action button (e.g., "Create your first order").
+
+5. "Escape Hatches" (Navigation)
+
+Interaction: Users should never feel trapped.
+
+Task: Ensure every sub-page (like 'Edit Profile' or 'View Details') has a clearly visible "Back" button or breadcrumb link at the top to return to the dashboard.
+
+Custom Error Pages:
+
+Create friendly 404.html (Page Not Found) and 500.html (Server Error) templates so users never see a raw code error. Include a button to go back Home.
+
+Apply these changes globally across the codebase.

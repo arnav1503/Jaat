@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Staff Portal - Menu Management</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style2.css') }}">
+    <script src="{{ url_for('static', filename='theme-toggle.js') }}"></script>
+</head>
+<body>
+    <div class="theme-switch-wrapper">
+        <span class="theme-icon">🌙</span>
+        <label class="theme-switch" for="checkbox">
+            <input type="checkbox" id="checkbox" onchange="toggleTheme()" />
+            <div class="slider round"></div>
+        </label>
+        <span class="theme-icon">☀️</span>
+    </div>
+    <button class="ai-assistant-btn" style="bottom: 20px; right: 20px;" onclick="window.location.href='/ai_assistant'" title="AI Assistant">🤖</button>
+    <button class="ai-assistant-btn" style="bottom: auto; top: 20px; right: 20px;" onclick="window.location.href='/feedback'" title="Send Feedback">💬</button>
+    
+    <div class="container staff-orders-page">
+        <div class="staff-header">
+            <button onclick="window.location.href='/staff_view'" class="back-nav-btn" style="margin-right: 20px;">← Back</button>
+            <h1>Menu Management</h1>
+            <div class="header-actions">
+                <button id="backBtn" class="back-nav-btn">← Back to Menu</button>
+                <button id="logoutBtn" class="logoutbtn">Logout</button>
+            </div>
+        </div>
+
+        <div class="dashboard-content">
+            <h2 style="text-align: center; margin-bottom: 2rem; color: var(--text-primary);">Manage Food Items</h2>
+            <div id="menuItemsContainer" style="display: flex; justify-content: center; align-items: center; min-height: 300px;">
+                <p>Loading menu items...</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='database.js') }}"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            loadMenuItems();
+            setupEventListeners();
+        });
+
+        async function loadMenuItems() {
+            try {
+                const menuContainer = document.getElementById('menuItemsContainer');
+                const foodItems = await window.CanteenDB.getFoodItems();
+
+                if (!foodItems || foodItems.length === 0) {
+                    menuContainer.innerHTML = '<div class="empty-state"><p>No menu items found.</p></div>';
+                    return;
+                }
+
+                let menuHTML = '<div class="menu-items-grid">';
+                foodItems.forEach(item => {
+                    const soldOutClass = item.soldOut ? 'sold-out' : '';
+                    menuHTML += `
+                        <div class="menu-item-card ${soldOutClass}">
+                            <h4>${item.name}</h4>
+                            <p>₹${item.price.toFixed(2)}</p>
+                            <button onclick="toggleSoldOut('${item.id}')" class="toggle-soldout-btn">
+                                ${item.soldOut ? 'Mark Available' : 'Mark Sold Out'}
+                            </button>
+                        </div>
+                    `;
+                });
+                menuHTML += '</div>';
+                menuContainer.innerHTML = menuHTML;
+            } catch (error) {
+                console.error('Error loading menu items:', error);
+                document.getElementById('menuItemsContainer').innerHTML = '<p>Error loading menu items</p>';
+            }
+        }
+
+        async function toggleSoldOut(itemId) {
+            try {
+                console.log('Toggling sold out status for item:', itemId);
+                const foodItems = await window.CanteenDB.getFoodItems();
+                const item = foodItems.find(i => i.id === itemId);
+
+                if (item) {
+                    const newSoldOutStatus = !item.soldOut;
+                    console.log('Current status:', item.soldOut, '-> New status:', newSoldOutStatus);
+
+                    // Call the backend API to update the item
+                    const result = await window.CanteenDB.updateMenuItem(itemId, newSoldOutStatus);
+
+                    console.log('Update result:', result);
+                    
+                    if (result) {
+                        console.log('Successfully updated item status');
+                        await loadMenuItems(); // Reload to show updated status
+                        alert(`${item.name} is now ${newSoldOutStatus ? 'sold out' : 'available'}`);
+                    } else {
+                        console.error('Failed to update item status');
+                        alert('Failed to update item status. Please try again.');
+                    }
+                } else {
+                    console.error('Item not found:', itemId);
+                    alert('Item not found');
+                }
+            } catch (error) {
+                console.error('Error toggling sold out status:', error);
+                alert('Failed to update item status: ' + error.message);
+            }
+        }
+
+        function setupEventListeners() {
+            document.getElementById('backBtn').addEventListener('click', () => {
+                window.location.href = '/staff_view';
+            });
+            document.getElementById('logoutBtn').addEventListener('click', () => {
+                fetch('/logout').finally(() => {
+                    window.CanteenDB.clearSession();
+                    alert('Logged out successfully!');
+                    window.location.href = '/';
+                });
+            });
+        }
+    </script>
+</body>
+</html>

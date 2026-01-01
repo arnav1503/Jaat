@@ -1,0 +1,234 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Food Selection - Canteen</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style2.css') }}">
+    <script src="{{ url_for('static', filename='theme-toggle.js') }}"></script>
+</head>
+<body>
+    <button class="ai-assistant-btn" style="bottom: 20px; right: 20px;" onclick="window.location.href='/ai_assistant'" title="AI Assistant">🤖</button>
+    <button class="ai-assistant-btn" style="bottom: auto; top: 20px; right: 20px;" onclick="window.location.href='/feedback'" title="Send Feedback">💬</button>
+    
+    <div class="container food-selection-page">
+        <h1>Select Your Delicious Food!</h1>
+
+        <div class="food-menu" id="foodMenu">
+            <p style="text-align: center; color: #666;">Loading menu items...</p>
+        </div>
+
+        <div class="order-summary">
+            <h2>Your Order:</h2>
+            <ul id="selectedItemsList"></ul>
+            <p>Total Estimated Price: ₹<span id="totalPrice">0.00</span></p>
+        </div>
+
+        <button id="placeOrderBtn" class="cta-button" disabled>Place Order</button>
+        <button id="backToProfileBtn" class="secondary-button">Back to Profile</button>
+    </div>
+
+    <script src="{{ url_for('static', filename='database.js') }}"></script>
+    <script>
+        let selectedItems = [];
+        let menuItems = [];
+        
+        // Nutrition points mapping for each food type
+        const nutritionPointsMap = {
+            'veggie burger': 10,
+            'paneer pizza': 8,
+            'fresh fruit': 10,
+            'spring roll': 7,
+            'milkshake': 3,
+            'chai': 2,
+            'coffee': 2,
+            'pizza': 8,
+            'salad': 10,
+            'juice': 8,
+            'roll': 7,
+            'sandwich': 6,
+            'pasta': 6,
+            'potato': 5,
+            'chips': 3,
+            'samosa': 4,
+            'chole': 8,
+            'noodles': 6,
+            'paneer': 8,
+            'gravy': 7,
+            'patties': 6
+        };
+        
+        function getNutritionPoints(itemName) {
+            const name = itemName.toLowerCase();
+            for (const [key, points] of Object.entries(nutritionPointsMap)) {
+                if (name.includes(key)) {
+                    return points;
+                }
+            }
+            return 5; // Default moderate nutrition points
+        }
+
+        // Load menu on page load
+        document.addEventListener('DOMContentLoaded', async () => {
+            await loadMenu();
+        });
+
+        async function loadMenu() {
+            try {
+                console.log('Fetching menu...');
+                menuItems = await window.CanteenDB.getFoodItems();
+                console.log('Menu items received:', menuItems);
+                
+                const menuContainer = document.getElementById('foodMenu');
+                
+                if (!menuItems || menuItems.length === 0) {
+                    menuContainer.innerHTML = '<p style="text-align: center; color: #999;">No items available at the moment.</p>';
+                    return;
+                }
+
+                menuContainer.innerHTML = '';
+                
+                menuItems.forEach(item => {
+                    const itemCard = document.createElement('div');
+                    itemCard.className = 'food-item-card';
+                    if (item.soldOut) {
+                        itemCard.classList.add('sold-out');
+                    }
+                    
+                    const nutritionPoints = getNutritionPoints(item.name);
+                    itemCard.innerHTML = `
+                        <div class="card-image-container">
+                            <img src="${item.image}" alt="${item.name}" onerror="this.src='/static/images/veggie_burger_vegeta.jpg'">
+                            <span style="position: absolute; top: 10px; right: 10px; background: #ff6b6b; color: white; padding: 5px 10px; border-radius: 20px; font-size: 0.85em; font-weight: bold;">⭐ ${nutritionPoints} pts</span>
+                        </div>
+                        <div class="card-content">
+                            <h3>${item.name}</h3>
+                            <p class="price">₹${item.price.toFixed(2)}</p>
+                            <p class="benefits">${item.benefits}</p>
+                            ${item.soldOut ? '<p class="sold-out-label">SOLD OUT</p>' : 
+                              `<div class="quantity-controls">
+                                <button type="button" onclick="changeQuantity('${item.id}', -1)">−</button>
+                                <span id="qty-${item.id}">0</span>
+                                <button type="button" onclick="changeQuantity('${item.id}', 1)">+</button>
+                              </div>`}
+                        </div>
+                    `;
+                    
+                    menuContainer.appendChild(itemCard);
+                });
+            } catch (error) {
+                console.error('Error loading menu:', error);
+                document.getElementById('foodMenu').innerHTML = 
+                    '<p style="text-align: center; color: red;">Failed to load menu. Please refresh the page.</p>';
+            }
+        }
+
+        function changeQuantity(itemId, change) {
+            const qtyElement = document.getElementById(`qty-${itemId}`);
+            let currentQty = parseInt(qtyElement.textContent);
+            let newQty = Math.max(0, currentQty + change);
+            
+            qtyElement.textContent = newQty;
+            
+            // Update selected items
+            const item = menuItems.find(i => i.id === itemId);
+            const existingIndex = selectedItems.findIndex(i => i.id === itemId);
+            
+            if (newQty > 0) {
+                if (existingIndex >= 0) {
+                    selectedItems[existingIndex].quantity = newQty;
+                } else {
+                    selectedItems.push({
+                        id: item.id,
+                        name: item.name,
+                        price: item.price,
+                        quantity: newQty,
+                        nutritionPoints: getNutritionPoints(item.name)
+                    });
+                }
+            } else {
+                if (existingIndex >= 0) {
+                    selectedItems.splice(existingIndex, 1);
+                }
+            }
+            
+            updateOrderSummary();
+        }
+
+        function updateOrderSummary() {
+            const listElement = document.getElementById('selectedItemsList');
+            const totalElement = document.getElementById('totalPrice');
+            const placeOrderBtn = document.getElementById('placeOrderBtn');
+            
+            listElement.innerHTML = '';
+            let total = 0;
+            
+            selectedItems.forEach(item => {
+                const li = document.createElement('li');
+                li.textContent = `${item.name} x ${item.quantity} = ₹${(item.price * item.quantity).toFixed(2)}`;
+                listElement.appendChild(li);
+                total += item.price * item.quantity;
+            });
+            
+            totalElement.textContent = total.toFixed(2);
+            placeOrderBtn.disabled = selectedItems.length === 0;
+        }
+        
+        function getTotalNutritionPoints() {
+            return selectedItems.reduce((sum, item) => sum + (item.nutritionPoints * item.quantity), 0);
+        }
+
+        document.getElementById('backToProfileBtn').addEventListener('click', () => {
+            const currentUser = sessionStorage.getItem('currentUser');
+            if (currentUser) {
+                try {
+                    const userData = JSON.parse(currentUser);
+                    if (userData.type === 'teacher') {
+                        window.location.href = '/teacher_info';
+                    } else {
+                        window.location.href = '/student_info';
+                    }
+                } catch {
+                    window.location.href = '/';
+                }
+            } else {
+                window.location.href = '/';
+            }
+        });
+
+        document.getElementById('placeOrderBtn').addEventListener('click', async () => {
+            if (selectedItems.length === 0) {
+                alert('Please select at least one item!');
+                return;
+            }
+
+            const orderData = {
+                items: selectedItems,
+                totalPrice: selectedItems.reduce((sum, item) => sum + (item.price * item.quantity), 0)
+            };
+
+            try {
+                const orderId = await window.CanteenDB.saveOrder(orderData);
+                if (orderId) {
+                    // Store order details in sessionStorage for thank you page
+                    sessionStorage.setItem('lastOrderId', orderId);
+                    sessionStorage.setItem('lastOrderItems', JSON.stringify(selectedItems));
+                    sessionStorage.setItem('lastOrderTotal', orderData.totalPrice);
+                    sessionStorage.setItem('lastOrderNutritionPoints', getTotalNutritionPoints());
+                    
+                    // Show success popup with order number
+                    alert(`🎉 Order Placed Successfully!\n\nYour Order Number: #${orderId}\n\nTotal: ₹${orderData.totalPrice.toFixed(2)}\n\nPlease save this order number for tracking.`);
+                    
+                    window.location.href = '/thank_you';
+                } else {
+                    alert('Failed to place order. Please try again.');
+                }
+            } catch (error) {
+                console.error('Error placing order:', error);
+                alert('An error occurred. Please try again.');
+            }
+        });
+    </script>
+</body>
+</html>

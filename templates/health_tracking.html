@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Health Tracking - Nutrition Points</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style2.css') }}">
+    <script src="{{ url_for('static', filename='theme-toggle.js') }}"></script>
+    <style>
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 20px;
+        }
+        .header h1 {
+            color: #333;
+            font-size: 2em;
+            margin-bottom: 5px;
+        }
+        .health-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        .health-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        .health-card h3 {
+            margin-bottom: 10px;
+            font-size: 0.9em;
+            opacity: 0.9;
+            text-transform: uppercase;
+        }
+        .health-card .value {
+            font-size: 2.5em;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        .health-card .unit {
+            font-size: 0.9em;
+            opacity: 0.8;
+        }
+        .status {
+            font-size: 0.85em;
+            padding: 8px 12px;
+            border-radius: 20px;
+            background: rgba(255,255,255,0.2);
+            display: inline-block;
+            margin-top: 5px;
+        }
+        .input-section {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            border-left: 4px solid #667eea;
+        }
+        .input-section h3 {
+            color: #333;
+            margin-bottom: 15px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #555;
+            font-weight: 500;
+        }
+        .form-group input {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            font-size: 1em;
+            transition: border-color 0.3s;
+        }
+        .form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        .btn-calculate {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 12px 25px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: 600;
+            transition: transform 0.2s;
+            width: 100%;
+        }
+        .btn-calculate:hover {
+            transform: translateY(-2px);
+        }
+        .daily-stats {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+        }
+        .daily-stats h3 {
+            color: #333;
+            margin-bottom: 15px;
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+        .stat-item {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+        .stat-item h4 {
+            color: #667eea;
+            margin-bottom: 8px;
+            font-size: 0.9em;
+            text-transform: uppercase;
+        }
+        .stat-item .value {
+            font-size: 1.8em;
+            font-weight: bold;
+            color: #333;
+        }
+        .health-points-section {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 12px;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .health-points-section h2 {
+            font-size: 1.5em;
+            margin-bottom: 10px;
+        }
+        .points-value {
+            font-size: 3em;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        .points-info {
+            font-size: 0.95em;
+            opacity: 0.9;
+        }
+        .nutrition-tips {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            border-left: 4px solid #28a745;
+        }
+        .nutrition-tips h3 {
+            color: #333;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .nutrition-tips ul {
+            list-style: none;
+            color: #666;
+        }
+        .nutrition-tips li {
+            padding: 8px 0;
+            border-bottom: 1px solid #ddd;
+            font-size: 0.95em;
+        }
+        .nutrition-tips li:last-child {
+            border-bottom: none;
+        }
+        .nutrition-tips li:before {
+            content: "✓ ";
+            color: #28a745;
+            font-weight: bold;
+            margin-right: 8px;
+        }
+        .back-btn {
+            display: inline-block;
+            background: #6c757d;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 6px;
+            text-decoration: none;
+            transition: background 0.3s;
+            margin-top: 20px;
+        }
+        .back-btn:hover {
+            background: #5a6268;
+        }
+        .success-message {
+            background: #d4edda;
+            color: #155724;
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            border: 1px solid #c3e6cb;
+            display: none;
+        }
+        .success-message.show {
+            display: block;
+        }
+        @media (max-width: 600px) {
+            .health-grid, .stats-grid {
+                grid-template-columns: 1fr;
+            }
+            .header h1 {
+                font-size: 1.5em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <button class="ai-assistant-btn" style="bottom: 20px; right: 20px;" onclick="window.location.href='/ai_assistant'" title="AI Assistant">🤖</button>
+    <div class="container">
+        <div class="header">
+            <h1>💪 Health & Nutrition Tracker</h1>
+            <p>Monitor your BMI, track calories, and earn nutrition points for healthy choices!</p>
+        </div>
+
+        <div class="health-points-section">
+            <h2>Your Nutrition Points</h2>
+            <div class="points-value" id="healthPoints">0</div>
+            <div class="points-info">
+                <p>Earn bonus points by making nutritious food choices! 🎉</p>
+                <p style="margin-top: 15px; font-size: 1.1em; background: rgba(255,255,255,0.2); padding: 12px; border-radius: 8px;">
+                    💰 Every 100 points = Rs 10 discount!
+                </p>
+            </div>
+        </div>
+
+        <div class="daily-stats">
+            <h3>📋 Your Stored Health Data</h3>
+            <div class="stats-grid">
+                <div class="stat-item">
+                    <h4>Height</h4>
+                    <div class="value" id="storedHeight">--</div>
+                    <div style="font-size: 0.85em; color: #999; margin-top: 5px;">cm</div>
+                </div>
+                <div class="stat-item">
+                    <h4>Weight</h4>
+                    <div class="value" id="storedWeight">--</div>
+                    <div style="font-size: 0.85em; color: #999; margin-top: 5px;">kg</div>
+                </div>
+                <div class="stat-item">
+                    <h4>BMI</h4>
+                    <div class="value" id="storedBMI">--</div>
+                    <div class="status" id="storedBMIStatus" style="margin-top: 5px; background: none; border: none; padding: 0;"></div>
+                </div>
+                <div class="stat-item">
+                    <h4>Nutrition Points (Total)</h4>
+                    <div class="value" id="storedNutritionPoints">0</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="input-section">
+            <h3>📊 Calculate Your BMI</h3>
+            <div class="form-group">
+                <label for="height">Height (cm)</label>
+                <input type="number" id="height" placeholder="Enter your height in cm" min="100" max="250">
+            </div>
+            <div class="form-group">
+                <label for="weight">Weight (kg)</label>
+                <input type="number" id="weight" placeholder="Enter your weight in kg" min="20" max="200">
+            </div>
+            <button class="btn-calculate" onclick="calculateBMI()">Calculate BMI</button>
+        </div>
+
+        <div class="health-grid">
+            <div class="health-card">
+                <h3>Body Mass Index</h3>
+                <div class="value" id="bmiValue">--</div>
+                <div class="unit">kg/m²</div>
+                <div class="status" id="bmiStatus">Enter height & weight</div>
+            </div>
+            <div class="health-card">
+                <h3>Daily Calories</h3>
+                <div class="value" id="dailyCalories">0</div>
+                <div class="unit">kcal</div>
+                <div class="status" id="calorieStatus">Track your intake</div>
+            </div>
+        </div>
+
+        <div class="daily-stats">
+            <h3>📅 Today's Nutrition Stats</h3>
+            <div class="stats-grid">
+                <div class="stat-item">
+                    <h4>Calories Consumed</h4>
+                    <div class="value" id="consumedCalories">0</div>
+                    <div style="font-size: 0.85em; color: #999; margin-top: 5px;">out of ~2000 kcal daily goal</div>
+                </div>
+                <div class="stat-item">
+                    <h4>Items Ordered Today</h4>
+                    <div class="value" id="itemsOrdered">0</div>
+                </div>
+                <div class="stat-item">
+                    <h4>Healthy Choices</h4>
+                    <div class="value" id="healthyChoices">0</div>
+                </div>
+                <div class="stat-item">
+                    <h4>Nutrition Progress</h4>
+                    <div class="value" id="nutritionPercent">0%</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="nutrition-tips">
+            <h3>🥗 Tips for Better Nutrition</h3>
+            <ul>
+                <li><strong>BMI Categories:</strong> Underweight (&lt;18.5) | Normal (18.5-24.9) | Overweight (25-29.9) | Obese (≥30)</li>
+                <li>Aim for 5-6 servings of fruits and vegetables daily</li>
+                <li>Choose whole grains and lean proteins for sustained energy</li>
+                <li>Stay hydrated - drink at least 8 glasses of water daily</li>
+                <li>Limit sugary drinks and processed snacks</li>
+                <li>Practice portion control and eat mindfully</li>
+                <li>Balance macronutrients: carbs, proteins, and healthy fats</li>
+                <li>Bonus: Each nutritious food choice gives you extra health points!</li>
+            </ul>
+        </div>
+
+        <div class="success-message" id="successMessage">
+            ✓ Your health data has been updated successfully!
+        </div>
+
+        <a href="/student_info" class="back-btn">← Back to Dashboard</a>
+    </div>
+
+    <script>
+        // Load user's health data on page load
+        function loadHealthData() {
+            // First try to fetch stored data from database
+            fetchStoredHealthData();
+            
+            // Fetch today's nutrition stats from backend
+            fetchNutritionStats();
+        }
+
+        async function fetchStoredHealthData() {
+            try {
+                const response = await fetch('/api/health_data');
+                if (!response.ok) throw new Error('Failed to fetch health data');
+                
+                const result = await response.json();
+                if (result.success && result.data) {
+                    const storedHeight = result.data.height;
+                    const storedWeight = result.data.weight;
+                    const storedBmi = result.data.bmi;
+                    
+                    // Populate input fields
+                    if (storedHeight) {
+                        document.getElementById('height').value = storedHeight;
+                        document.getElementById('storedHeight').textContent = storedHeight;
+                    }
+                    
+                    if (storedWeight) {
+                        document.getElementById('weight').value = storedWeight;
+                        document.getElementById('storedWeight').textContent = storedWeight;
+                    }
+                    
+                    // Display BMI from database
+                    if (storedBmi) {
+                        document.getElementById('storedBMI').textContent = storedBmi;
+                        
+                        // Display BMI status
+                        const bmiVal = parseFloat(storedBmi);
+                        let status = '';
+                        let statusColor = '';
+                        if (bmiVal < 18.5) {
+                            status = 'Underweight';
+                            statusColor = '#3498db';
+                        } else if (bmiVal < 25) {
+                            status = 'Normal Weight';
+                            statusColor = '#27ae60';
+                        } else if (bmiVal < 30) {
+                            status = 'Overweight';
+                            statusColor = '#f39c12';
+                        } else {
+                            status = 'Obese';
+                            statusColor = '#e74c3c';
+                        }
+                        
+                        const statusEl = document.getElementById('storedBMIStatus');
+                        statusEl.textContent = status;
+                        statusEl.style.backgroundColor = statusColor;
+                        statusEl.style.color = 'white';
+                        statusEl.style.padding = '8px 12px';
+                        statusEl.style.borderRadius = '20px';
+                        statusEl.style.display = 'inline-block';
+                        statusEl.style.marginTop = '5px';
+                        statusEl.style.fontSize = '0.85em';
+                    }
+                    
+                    // If we have height and weight, auto-calculate BMI
+                    if (storedHeight && storedWeight) {
+                        calculateBMI();
+                    } else if (storedHeight) {
+                        // At least populate the height field
+                        document.getElementById('height').value = storedHeight;
+                    }
+                }
+            } catch (error) {
+                console.log('Could not fetch stored health data:', error);
+                // Fall back to localStorage
+                const storedData = localStorage.getItem('healthData');
+                if (storedData) {
+                    const data = JSON.parse(storedData);
+                    if (data.height && data.weight) {
+                        document.getElementById('height').value = data.height;
+                        document.getElementById('weight').value = data.weight;
+                        document.getElementById('storedHeight').textContent = data.height;
+                        document.getElementById('storedWeight').textContent = data.weight;
+                        document.getElementById('storedBMI').textContent = data.bmi || '--';
+                        calculateBMI();
+                    }
+                }
+            }
+        }
+        
+        async function fetchNutritionStats() {
+            try {
+                const response = await fetch('/api/nutrition_stats');
+                if (!response.ok) throw new Error('Failed to fetch nutrition stats');
+                
+                const data = await response.json();
+                if (data.success) {
+                    document.getElementById('consumedCalories').textContent = data.totalCalories;
+                    document.getElementById('itemsOrdered').textContent = data.itemsOrdered;
+                    document.getElementById('healthyChoices').textContent = data.healthyChoices;
+                    document.getElementById('nutritionPercent').textContent = data.nutritionPercent + '%';
+                    document.getElementById('dailyCalories').textContent = data.totalCalories;
+                    document.getElementById('healthPoints').textContent = data.nutritionPoints;
+                    
+                    // Also display total nutrition points in the stored data section
+                    document.getElementById('storedNutritionPoints').textContent = data.nutritionPoints;
+                    
+                    // Update calorie status
+                    if (data.totalCalories === 0) {
+                        document.getElementById('calorieStatus').textContent = 'Start ordering!';
+                    } else if (data.totalCalories < 1500) {
+                        document.getElementById('calorieStatus').textContent = 'Keep going!';
+                    } else if (data.totalCalories < 2500) {
+                        document.getElementById('calorieStatus').textContent = 'Great balance!';
+                    } else {
+                        document.getElementById('calorieStatus').textContent = 'Moderate intake';
+                    }
+                }
+            } catch (error) {
+                console.error('Error fetching nutrition stats:', error);
+            }
+        }
+
+        function calculateBMI() {
+            const height = parseFloat(document.getElementById('height').value);
+            const weight = parseFloat(document.getElementById('weight').value);
+            
+            if (!height || !weight || height <= 0 || weight <= 0) {
+                alert('Please enter valid height and weight');
+                return;
+            }
+            
+            // BMI = weight (kg) / (height (m) ^ 2)
+            const heightInMeters = height / 100;
+            const bmi = (weight / (heightInMeters * heightInMeters)).toFixed(1);
+            
+            document.getElementById('bmiValue').textContent = bmi;
+            
+            let status = '';
+            let statusColor = '';
+            if (bmi < 18.5) {
+                status = 'Underweight';
+                statusColor = '#3498db';
+            } else if (bmi < 25) {
+                status = 'Normal Weight';
+                statusColor = '#27ae60';
+            } else if (bmi < 30) {
+                status = 'Overweight';
+                statusColor = '#f39c12';
+            } else {
+                status = 'Obese';
+                statusColor = '#e74c3c';
+            }
+            
+            const statusEl = document.getElementById('bmiStatus');
+            statusEl.textContent = status;
+            statusEl.style.backgroundColor = statusColor;
+            statusEl.style.color = 'white';
+            
+            // Save to localStorage
+            localStorage.setItem('healthData', JSON.stringify({
+                height: height,
+                weight: weight,
+                bmi: bmi,
+                timestamp: new Date().toISOString()
+            }));
+            
+            // Save to database
+            saveHealthDataToDatabase(height, bmi);
+        }
+
+        async function saveHealthDataToDatabase(height, bmi) {
+            try {
+                const weight = document.getElementById('weight').value;
+                const response = await fetch('/api/health_data', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        height: height.toString(),
+                        weight: weight.toString(),
+                        bmi: bmi.toString()
+                    })
+                });
+                
+                if (!response.ok) {
+                    console.error('Failed to save health data');
+                    showSuccessMessage();
+                    return;
+                }
+                
+                const result = await response.json();
+                if (result.success) {
+                    console.log('✓ Health data saved to database');
+                }
+                showSuccessMessage();
+            } catch (error) {
+                console.error('Error saving health data:', error);
+                showSuccessMessage();
+            }
+        }
+
+
+
+        function showSuccessMessage() {
+            const msgEl = document.getElementById('successMessage');
+            msgEl.classList.add('show');
+            setTimeout(() => {
+                msgEl.classList.remove('show');
+            }, 3000);
+        }
+
+        // Initialize on page load
+        window.addEventListener('load', () => {
+            loadHealthData();
+        });
+
+        // Refresh stats every 15 seconds for real-time updates
+        setInterval(fetchNutritionStats, 15000);
+    </script>
+</body>
+</html>
